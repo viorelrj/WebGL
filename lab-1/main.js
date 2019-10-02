@@ -19,7 +19,7 @@ class Buffer {
     }
 }
 
-class VertexBuffer extends Buffer {
+class ArrayBuffer extends Buffer {
     constructor(gl) {
         super();
         this.id = gl.createBuffer();
@@ -53,6 +53,41 @@ class IndexBuffer extends Buffer {
     }
 }
 
+class Square {
+    constructor() {
+        this.vertices = [
+            ...[-0.5, -0.5, 0],
+            ...[0.5, -0.5, 0],
+            ...[0.5, 0.5, 0],
+            ...[-0.5, 0.5, 0],
+        ];
+
+        this.colors = [
+            ...[1, 0, 0],
+            ...[0, 1, 0],
+            ...[0, 0, 1],
+            ...[1, 1, 1]
+        ]
+
+        this.indices = [
+            ...[0, 1, 2],
+            ...[0, 2, 3]
+        ]
+    }
+
+    getVertices() {
+        return this.vertices;
+    }
+
+    getIndices() {
+        return this.indices;
+    }
+
+    getColors() {
+        return this.colors;
+    }
+}
+
 class Triangle {
     constructor() {
         this.vertices = [
@@ -72,8 +107,11 @@ class Triangle {
     getIndices() {
         return this.indices;
     }
-}
 
+    getColors() {
+        return this.colors;
+    }
+}
 
 
 function getProgram() {
@@ -97,16 +135,20 @@ window.onload = function init() {
     const program = getProgram();
     const triangle = new Triangle();
 
-    const triangleVerticesBuffer = new VertexBuffer(gl);
-    triangleVerticesBuffer.upload(gl, triangle.getVertices());
+    const square = new Square();
 
-    const triangleIndexBuffer = new IndexBuffer(gl);
-    triangleIndexBuffer.upload(gl, triangle.getIndices());
+    const squareVerticesBuffer = new ArrayBuffer(gl);
+    squareVerticesBuffer.upload(gl, square.getVertices());
 
+    const squareColorsBuffer = new ArrayBuffer(gl);
+    squareColorsBuffer.upload(gl, square.getColors());
+
+    const squareIndexBuffer = new IndexBuffer(gl);
+    squareIndexBuffer.upload(gl, square.getIndices());
 
     // Make the triangle's indexes as main buffer
-    gl.bindBuffer(triangleVerticesBuffer.getType(), triangleVerticesBuffer.id);
-    gl.bindBuffer(triangleIndexBuffer.getType(), triangleIndexBuffer.id);
+    gl.bindBuffer(squareVerticesBuffer.getType(), squareVerticesBuffer.id);
+    gl.bindBuffer(squareIndexBuffer.getType(), squareIndexBuffer.id);
 
     // Get the attribute location
     const coord = gl.getAttribLocation(program, 'coordinates');
@@ -117,6 +159,13 @@ window.onload = function init() {
     // Enable the attribute
     gl.enableVertexAttribArray(coord);
 
+
+    gl.bindBuffer(squareColorsBuffer.getType(), squareColorsBuffer.id);
+    const color = gl.getAttribLocation(program, 'color');
+    gl.vertexAttribPointer(color, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(color);
+
+
     // Clear the canvas
     gl.clearColor(0.5, 0.5, 0.5, 1);
 
@@ -124,5 +173,5 @@ window.onload = function init() {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     // Draw the triangle
-    gl.drawElements(gl.TRIANGLES, triangle.getIndices().length, gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(gl.TRIANGLES, square.getIndices().length, gl.UNSIGNED_SHORT, 0);
 }
