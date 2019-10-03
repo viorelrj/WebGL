@@ -3,11 +3,16 @@
 
 <script id="vertex-shader" type="x-shader/x-vertex">
 attribute vec3 coordinates;
+
 attribute vec3 color;
 varying vec3 vColor;
+
+uniform mat4 worldMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 projectionMatrix;
 	
 void main(void) {
-    gl_Position = vec4(coordinates, 1.0);
+    gl_Position = projectionMatrix * viewMatrix * worldMatrix * vec4(coordinates, 1.0);
     vColor = color;
 }
 </script>
@@ -22,9 +27,11 @@ void main(void) {
 }
 </script>
 
+<script type="text/javascript" src="../Common/gl-matrix-min.js"></script>
 <script type="text/javascript" src="../Common/webgl-utils.js"></script>
 <script type="text/javascript" src="../Common/initShaders.js"></script>
 <script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="consts.js"></script>
 <script type="text/javascript" src="main.js"></script>
 
 <body>

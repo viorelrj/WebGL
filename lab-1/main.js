@@ -1,21 +1,85 @@
-// Creating the buffer object must happen only once
-
 let gl;
+let canvas;
 
+const cubeProps = {
+    vertices: [
+        // Face
+        ...[-1, -1, -1],
+        ...[1, -1, -1],
+        ...[1, 1, -1],
+        ...[-1, 1, -1],
+
+        // Back
+
+        ...[1, -1, 1],
+        ...[-1, -1, 1],
+        ...[-1, 1, 1],
+        ...[1, 1, 1]
+    ],
+
+    indices: [
+        // Front
+        ...[0, 1, 2],
+        ...[0, 2, 3],
+
+        // Right
+        ...[1, 4, 7],
+        ...[1, 7, 2],
+
+        // Left
+        ...[5, 0, 3],
+        ...[5, 3, 6],
+
+        // Top
+        ...[3, 2, 7],
+        ...[3, 7, 6],
+
+        // Bottom
+        ...[1, 0, 5],
+        ...[1, 5, 4],
+
+        // Back
+        ...[4, 5, 6],
+        ...[4, 6, 7]
+    ],
+
+    colors: [
+        ...[0, 0, 0],
+        ...[0, 0, 1],
+        ...[0, 1, 0],
+        ...[0, 1, 1],
+
+        ...[1, 0, 0],
+        ...[1, 0, 1],
+        ...[1, 1, 0],
+        ...[1, 1, 1],
+
+    ]
+}
 
 class Buffer {
-    uploadToBuffer(gl, id, data, vbo = false) {
-        const target = (vbo) ? gl.ELEMENT_ARRAY_BUFFER : gl.ARRAY_BUFFER;
-        const type = (vbo)? Uint16Array : Float32Array;
+    constructor() {
+        this.target = null;
+        this.id = null;
+    }
+
+    upload(gl, data) {
+        const type = (this.target === gl.ELEMENT_ARRAY_BUFFER)? Uint16Array : Float32Array;
 
         // Make the buffer active
-        gl.bindBuffer(target, id);
-
+        gl.bindBuffer(this.target, this.id);
         // Upload data to buffer
-        gl.bufferData(target, new type(data), gl.STATIC_DRAW);
-
+        gl.bufferData(this.target, new type(data), gl.STATIC_DRAW);
         // Unbind the buffer
-        gl.bindBuffer(target, null);
+        gl.bindBuffer(this.target, null);
+    }
+
+    getType() {
+        return this.target;
+    }
+
+    activate(gl) {
+        gl.bindBuffer(this.target, this.id);
     }
 }
 
@@ -26,14 +90,6 @@ class ArrayBuffer extends Buffer {
         this.target = gl.ARRAY_BUFFER;
         if (!this.id) { console.error('Failed to create buffer'); }
     }
-
-    upload(gl, data) {
-        this.uploadToBuffer(gl, this.id, data, false);
-    }
-
-    getType() {
-        return gl.ARRAY_BUFFER;
-    }
 }
 
 class IndexBuffer extends Buffer {
@@ -43,24 +99,67 @@ class IndexBuffer extends Buffer {
         this.target = gl.ELEMENT_ARRAY_BUFFER;
         if (!this.id) { console.error('Failed to create buffer'); }
     }
+}
 
-    upload(gl, data) {
-        this.uploadToBuffer(gl, this.id, data, true);
+class GLSLVar {
+    constructor (gl, program, name) {
+        this.id = gl.getUniformLocation(program, name);
     }
 
-    getType() {
-        return gl.ELEMENT_ARRAY_BUFFER;
+    upload(gl, variable) {
+        gl.uniformMatrix4fv(this.id, gl.FALSE, variable);
+    }
+}
+
+class CanvasObject {
+    constructor(vertices = [], colors = [], indices = []) {
+        this.vertices = vertices;
+        this.colors = colors;
+        this.indices = indices;
+
+        this.verticesBuffer = null;
+        this.colorsBuffer = null;
+        this.indicesBuffer = null;
+    }
+
+
+    initBuffer() {
+        this.verticesBuffer = new ArrayBuffer(gl);
+        this.colorsBuffer = new ArrayBuffer(gl);
+        this.indicesBuffer = new IndexBuffer(gl);
+    }
+
+    uploadSelfToBuffer(gl) {
+        this.verticesBuffer.upload(gl, this.getVertices());
+        this.colorsBuffer.upload(gl, this.getColors());
+        this.indicesBuffer.upload(gl, this.getIndices());
+    }
+
+    getVertices() {
+        return this.vertices;
+    }
+
+    getIndices() {
+        return this.indices;
+    }
+
+    getIndicesLength() {
+        return this.indices.length
+    }
+
+    getColors() {
+        return this.colors;
     }
 }
 
 class Square {
-    constructor() {
+    constructor(gl, origin = [0, 0, 0], size = 1) {
         this.vertices = [
-            ...[-0.5, -0.5, 0],
-            ...[0.5, -0.5, 0],
-            ...[0.5, 0.5, 0],
-            ...[-0.5, 0.5, 0],
-        ];
+            ...[-1, -1, 0],
+            ...[1, -1, 0],
+            ...[1, 1, 0],
+            ...[-1, 1, 0],
+        ].map((x) => x * size);
 
         this.colors = [
             ...[1, 0, 0],
@@ -73,6 +172,16 @@ class Square {
             ...[0, 1, 2],
             ...[0, 2, 3]
         ]
+
+        this.verticesBuffer = null;
+        this.colorsBuffer = null;
+        this.indicesBuffer = null;
+    }
+
+    initBuffer() {
+        this.verticesBuffer = new ArrayBuffer(gl);
+        this.colorsBuffer = new ArrayBuffer(gl);
+        this.indicesBuffer = new IndexBuffer(gl);
     }
 
     getVertices() {
@@ -115,7 +224,7 @@ class Triangle {
 
 
 function getProgram() {
-    const canvas = document.getElementById("gl-canvas");
+    canvas = document.getElementById("gl-canvas");
 
     gl = WebGLUtils.setupWebGL(canvas);
     if (!gl) { alert("WebGL isn't available"); }
@@ -125,7 +234,7 @@ function getProgram() {
 
     gl.enable(gl.DEPTH_TEST);
 
-    var program = initShaders(gl, "vertex-shader", "fragment-shader");
+    let program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
 
     return program;
@@ -133,45 +242,59 @@ function getProgram() {
 
 window.onload = function init() {
     const program = getProgram();
-    const triangle = new Triangle();
 
-    const square = new Square();
+    const cube = new CanvasObject(cubeProps.vertices, cubeProps.colors, cubeProps.indices);
 
-    const squareVerticesBuffer = new ArrayBuffer(gl);
-    squareVerticesBuffer.upload(gl, square.getVertices());
 
-    const squareColorsBuffer = new ArrayBuffer(gl);
-    squareColorsBuffer.upload(gl, square.getColors());
+    cube.initBuffer();
+    cube.uploadSelfToBuffer(gl);
 
-    const squareIndexBuffer = new IndexBuffer(gl);
-    squareIndexBuffer.upload(gl, square.getIndices());
-
-    // Make the triangle's indexes as main buffer
-    gl.bindBuffer(squareVerticesBuffer.getType(), squareVerticesBuffer.id);
-    gl.bindBuffer(squareIndexBuffer.getType(), squareIndexBuffer.id);
-
-    // Get the attribute location
+    cube.indicesBuffer.activate(gl);
+    cube.verticesBuffer.activate(gl);
     const coord = gl.getAttribLocation(program, 'coordinates');
-
-    // Point an attribute to the currently bound VBO
     gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
-
-    // Enable the attribute
     gl.enableVertexAttribArray(coord);
 
-
-    gl.bindBuffer(squareColorsBuffer.getType(), squareColorsBuffer.id);
+    cube.colorsBuffer.activate(gl);
     const color = gl.getAttribLocation(program, 'color');
     gl.vertexAttribPointer(color, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(color);
 
+    const glsl_projectionMatrix = new GLSLVar(gl, program, 'projectionMatrix');
+    const glsl_viewMatrix = new GLSLVar(gl, program, 'viewMatrix');
+    const glsl_worldMatrix = new GLSLVar(gl, program, 'worldMatrix');
 
-    // Clear the canvas
-    gl.clearColor(0.5, 0.5, 0.5, 1);
+    let worldMatrix= new glMatrix.mat4.create();
+    let viewMatrix= new glMatrix.mat4.create();
+    let projectionMatrix = new glMatrix.mat4.create();
 
-    // Clear the color buffer bit
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    glMatrix.mat4.lookAt(viewMatrix, [0, 0, 10], [0, 0, 0], [0, 1, 0]);
+    glMatrix.mat4.perspective(projectionMatrix, radians(45), canvas.width / canvas.height, 0.1, 1000.0);
 
-    // Draw the triangle
-    gl.drawElements(gl.TRIANGLES, square.getIndices().length, gl.UNSIGNED_SHORT, 0);
+    glsl_worldMatrix.upload(gl, worldMatrix);
+    glsl_viewMatrix.upload(gl, viewMatrix);
+    glsl_projectionMatrix.upload(gl, projectionMatrix);
+
+
+    const identityMatrix = glMatrix.mat4.create();
+    let angle;
+
+    function render() {
+        angle = (performance.now() / 1000) / 6 * (2 * Math.PI);
+        glMatrix.mat4.rotate(worldMatrix, identityMatrix, angle, [0, 1, 0]);
+
+        glsl_worldMatrix.upload(gl, worldMatrix);
+
+        // Clear the canvas
+        gl.clearColor(0.5, 0.5, 0.5, 1);
+        // Clear the color buffer bit
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        // Draw the triangle
+        gl.drawElements(gl.TRIANGLES, cube.getIndicesLength(), gl.UNSIGNED_SHORT, 0);
+
+
+        requestAnimationFrame(render);
+    }
+
+    this.requestAnimationFrame(render);
 }
