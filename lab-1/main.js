@@ -1,6 +1,8 @@
 let gl;
 let canvas;
 
+const identityMatrix = glMatrix.mat4.create();
+
 const cubeProps = {
     vertices: [
         // Face
@@ -120,6 +122,10 @@ class CanvasObject {
         this.verticesBuffer = null;
         this.colorsBuffer = null;
         this.indicesBuffer = null;
+
+        this.glsl_projectionMatrix = null;
+        this.glsl_viewMatrix = null;
+        this.glsl_worldMatrix = null;
     }
 
 
@@ -150,78 +156,50 @@ class CanvasObject {
     getColors() {
         return this.colors;
     }
-}
 
-class Square {
-    constructor(gl, origin = [0, 0, 0], size = 1) {
-        this.vertices = [
-            ...[-1, -1, 0],
-            ...[1, -1, 0],
-            ...[1, 1, 0],
-            ...[-1, 1, 0],
-        ].map((x) => x * size);
-
-        this.colors = [
-            ...[1, 0, 0],
-            ...[0, 1, 0],
-            ...[0, 0, 1],
-            ...[1, 1, 1]
-        ]
-
-        this.indices = [
-            ...[0, 1, 2],
-            ...[0, 2, 3]
-        ]
-
-        this.verticesBuffer = null;
-        this.colorsBuffer = null;
-        this.indicesBuffer = null;
+    rotate(gl, identityMatrix, angle, axis) {
+        glMatrix.mat4.rotate(this.worldMatrix, identityMatrix, angle, axis);
+        this.glsl_worldMatrix.upload(gl, this.worldMatrix);
     }
 
-    initBuffer() {
-        this.verticesBuffer = new ArrayBuffer(gl);
-        this.colorsBuffer = new ArrayBuffer(gl);
-        this.indicesBuffer = new IndexBuffer(gl);
+    initSelf(canvas, gl, program) {
+        this.initBuffer();
+
+        this.glsl_projectionMatrix = new GLSLVar(gl, program, 'projectionMatrix');
+        this.glsl_viewMatrix = new GLSLVar(gl, program, 'viewMatrix');
+        this.glsl_worldMatrix = new GLSLVar(gl, program, 'worldMatrix');
+
+        this.worldMatrix = new glMatrix.mat4.create();
+        this.viewMatrix = new glMatrix.mat4.create();
+        this.projectionMatrix = new glMatrix.mat4.create();
+
+        glMatrix.mat4.lookAt(this.viewMatrix, [0, 0, 10], [0, 0, 0], [0, 1, 0]);
+        glMatrix.mat4.perspective(this.projectionMatrix, radians(45), canvas.width / canvas.height, 0.1, 1000.0);
     }
 
-    getVertices() {
-        return this.vertices;
+    activateSelf(gl, program) {
+        this.uploadSelfToBuffer(gl);
+        this.indicesBuffer.activate(gl);
+
+        this.verticesBuffer.activate(gl);
+        const coord = gl.getAttribLocation(program, 'coordinates');
+        gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(coord);
+
+        this.colorsBuffer.activate(gl);
+        const color = gl.getAttribLocation(program, 'color');
+        gl.vertexAttribPointer(color, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(color);
+
+        this.glsl_worldMatrix.upload(gl, this.worldMatrix);
+        this.glsl_viewMatrix.upload(gl, this.viewMatrix);
+        this.glsl_projectionMatrix.upload(gl, this.projectionMatrix);
     }
 
-    getIndices() {
-        return this.indices;
-    }
-
-    getColors() {
-        return this.colors;
+    drawSelf(gl) {
+        gl.drawElements(gl.TRIANGLES, this.getIndicesLength(), gl.UNSIGNED_SHORT, 0);
     }
 }
-
-class Triangle {
-    constructor() {
-        this.vertices = [
-            ...[-0.5, -0.5, 0],
-            ...[0.5, -0.5, 0],
-            ...[0.0, 0.5, 0],
-        ];
-        this.indices = [
-            0, 1, 2
-        ]
-    }
-
-    getVertices() {
-        return this.vertices;
-    }
-
-    getIndices() {
-        return this.indices;
-    }
-
-    getColors() {
-        return this.colors;
-    }
-}
-
 
 function getProgram() {
     canvas = document.getElementById("gl-canvas");
@@ -244,54 +222,25 @@ window.onload = function init() {
     const program = getProgram();
 
     const cube = new CanvasObject(cubeProps.vertices, cubeProps.colors, cubeProps.indices);
-
-
-    cube.initBuffer();
-    cube.uploadSelfToBuffer(gl);
-
-    cube.indicesBuffer.activate(gl);
-    cube.verticesBuffer.activate(gl);
-    const coord = gl.getAttribLocation(program, 'coordinates');
-    gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(coord);
-
-    cube.colorsBuffer.activate(gl);
-    const color = gl.getAttribLocation(program, 'color');
-    gl.vertexAttribPointer(color, 3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(color);
-
-    const glsl_projectionMatrix = new GLSLVar(gl, program, 'projectionMatrix');
-    const glsl_viewMatrix = new GLSLVar(gl, program, 'viewMatrix');
-    const glsl_worldMatrix = new GLSLVar(gl, program, 'worldMatrix');
-
-    let worldMatrix= new glMatrix.mat4.create();
-    let viewMatrix= new glMatrix.mat4.create();
-    let projectionMatrix = new glMatrix.mat4.create();
-
-    glMatrix.mat4.lookAt(viewMatrix, [0, 0, 10], [0, 0, 0], [0, 1, 0]);
-    glMatrix.mat4.perspective(projectionMatrix, radians(45), canvas.width / canvas.height, 0.1, 1000.0);
-
-    glsl_worldMatrix.upload(gl, worldMatrix);
-    glsl_viewMatrix.upload(gl, viewMatrix);
-    glsl_projectionMatrix.upload(gl, projectionMatrix);
-
-
-    const identityMatrix = glMatrix.mat4.create();
+    cube.initSelf(canvas, gl, program);
+    
+    const secondCube = new CanvasObject(cubeProps.vertices.map(x => x + 3), cubeProps.colors, cubeProps.indices);
+    secondCube.initSelf(canvas, gl, program);
+    
     let angle;
-
     function render() {
         angle = (performance.now() / 1000) / 6 * (2 * Math.PI);
-        glMatrix.mat4.rotate(worldMatrix, identityMatrix, angle, [0, 1, 0]);
 
-        glsl_worldMatrix.upload(gl, worldMatrix);
-
-        // Clear the canvas
         gl.clearColor(0.5, 0.5, 0.5, 1);
-        // Clear the color buffer bit
         gl.clear(gl.COLOR_BUFFER_BIT);
-        // Draw the triangle
-        gl.drawElements(gl.TRIANGLES, cube.getIndicesLength(), gl.UNSIGNED_SHORT, 0);
-
+        
+        cube.rotate(gl, identityMatrix, angle, [0, 1, 0]);
+        cube.activateSelf(gl, program);
+        cube.drawSelf(gl);
+        
+        secondCube.rotate(gl, identityMatrix, angle, [0, 1, 0]);
+        secondCube.activateSelf(gl, program);
+        secondCube.drawSelf(gl);
 
         requestAnimationFrame(render);
     }
