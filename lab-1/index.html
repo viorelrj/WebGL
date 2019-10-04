@@ -10,9 +10,10 @@ varying vec3 vColor;
 uniform mat4 worldMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
+uniform mat4 rotationMatrix;
 	
 void main(void) {
-    gl_Position = projectionMatrix * viewMatrix * worldMatrix * vec4(coordinates, 1.0);
+    gl_Position = projectionMatrix * viewMatrix * worldMatrix * rotationMatrix * vec4(coordinates, 1.0);
     vColor = color;
 }
 </script>

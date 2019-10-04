@@ -123,11 +123,16 @@ class CanvasObject {
         this.colorsBuffer = null;
         this.indicesBuffer = null;
 
+        this.worldMatrix = null;
+        this.viewMatrix = null;
+        this.projectionMatrix = null;
+        this.rotationMatrix = null;
+
         this.glsl_projectionMatrix = null;
         this.glsl_viewMatrix = null;
         this.glsl_worldMatrix = null;
+        this.glsl_rotationMatrix = null;
     }
-
 
     initBuffer() {
         this.verticesBuffer = new ArrayBuffer(gl);
@@ -158,7 +163,20 @@ class CanvasObject {
     }
 
     rotate(gl, identityMatrix, angle, axis) {
-        glMatrix.mat4.rotate(this.worldMatrix, identityMatrix, angle, axis);
+        let identity = glMatrix.mat4.create();
+        let translator = glMatrix.mat4.create();
+
+        glMatrix.mat4.mul(translator, identity, axis);
+
+        glMatrix.mat4.rotate(this.rotationMatrix, identityMatrix, angle, axis);
+        this.glsl_rotationMatrix.upload(gl, this.rotationMatrix);
+    }
+
+    translate(gl, axis) {
+        let translator = glMatrix.vec3.clone(axis);
+
+
+        glMatrix.mat4.fromTranslation(this.worldMatrix, translator);
         this.glsl_worldMatrix.upload(gl, this.worldMatrix);
     }
 
@@ -168,13 +186,14 @@ class CanvasObject {
         this.glsl_projectionMatrix = new GLSLVar(gl, program, 'projectionMatrix');
         this.glsl_viewMatrix = new GLSLVar(gl, program, 'viewMatrix');
         this.glsl_worldMatrix = new GLSLVar(gl, program, 'worldMatrix');
+        this.glsl_rotationMatrix = new GLSLVar(gl, program, 'rotationMatrix');
 
         this.worldMatrix = new glMatrix.mat4.create();
         this.viewMatrix = new glMatrix.mat4.create();
         this.projectionMatrix = new glMatrix.mat4.create();
+        this.rotationMatrix = new glMatrix.mat4.create();
 
-        glMatrix.mat4.lookAt(this.viewMatrix, [0, 0, 10], [0, 0, 0], [0, 1, 0]);
-        glMatrix.mat4.perspective(this.projectionMatrix, radians(45), canvas.width / canvas.height, 0.1, 1000.0);
+        setPerspective(canvas, this);
     }
 
     activateSelf(gl, program) {
@@ -194,6 +213,7 @@ class CanvasObject {
         this.glsl_worldMatrix.upload(gl, this.worldMatrix);
         this.glsl_viewMatrix.upload(gl, this.viewMatrix);
         this.glsl_projectionMatrix.upload(gl, this.projectionMatrix);
+        this.glsl_rotationMatrix.upload(gl, this.rotationMatrix);
     }
 
     drawSelf(gl) {
@@ -218,14 +238,21 @@ function getProgram() {
     return program;
 }
 
+function setPerspective(canvas, obj) {
+    glMatrix.mat4.lookAt(obj.viewMatrix, [0, 0, 15], [0, 0, 0], [0, 1, 0]);
+    glMatrix.mat4.perspective(obj.projectionMatrix, radians(45), canvas.width / canvas.height, 0.1, 1000.0);
+}
+
 window.onload = function init() {
     const program = getProgram();
 
     const cube = new CanvasObject(cubeProps.vertices, cubeProps.colors, cubeProps.indices);
     cube.initSelf(canvas, gl, program);
-    
-    const secondCube = new CanvasObject(cubeProps.vertices.map(x => x + 3), cubeProps.colors, cubeProps.indices);
+    cube.translate(gl, [-2, 0, 0]);
+
+    const secondCube = new CanvasObject(cubeProps.vertices, cubeProps.colors, cubeProps.indices);
     secondCube.initSelf(canvas, gl, program);
+    secondCube.translate(gl, [3, 0, 0]);
     
     let angle;
     function render() {
@@ -238,7 +265,7 @@ window.onload = function init() {
         cube.activateSelf(gl, program);
         cube.drawSelf(gl);
         
-        secondCube.rotate(gl, identityMatrix, angle, [0, 1, 0]);
+        secondCube.rotate(gl, identityMatrix, angle, [0, -1, -2]);
         secondCube.activateSelf(gl, program);
         secondCube.drawSelf(gl);
 
