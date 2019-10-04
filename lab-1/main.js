@@ -4,7 +4,7 @@ let canvas;
 const identityMatrix = glMatrix.mat4.create();
 
 const cubeProps = {
-    vertices: [
+vertices: [
         // Face
         ...[-1, -1, -1],
         ...[1, -1, -1],
@@ -56,6 +56,41 @@ const cubeProps = {
         ...[1, 1, 0],
         ...[1, 1, 1],
 
+    ]
+}
+
+const pyramidProps = {
+    vertices: [
+        // top
+        ...[0, 1, 0],
+
+        // Front left
+        ...[0.5, 0, -0.5],
+
+        // Front right
+        ...[0.5, 0, -0.5],
+
+        // back right
+        ...[0.5, 0, 0.5],
+
+        // back left
+        ...[-0.5, 0, 0.5],
+    ],
+
+    indices: [
+        ...[4, 2, 1],
+        ...[4, 3, 2],
+        ...[1, 2, 0],
+        ...[2, 3, 0],
+        ...[3, 4, 0],
+        ...[4, 1, 0],
+    ],
+    colors: [
+        ...[1, 1, 0],
+        ...[1, 1, 0],
+        ...[1, 1, 0],
+        ...[1, 1, 0],
+        ...[1, 1, 0],
     ]
 }
 
@@ -243,31 +278,113 @@ function setPerspective(canvas, obj) {
     glMatrix.mat4.perspective(obj.projectionMatrix, radians(45), canvas.width / canvas.height, 0.1, 1000.0);
 }
 
+function createSphere(precision = 3, radius = 1) {
+    let x, y, z, xy;
+
+    let sectorCount = precision;
+    let stackCount = precision;
+
+    let sectorStep = 2 * Math.PI / sectorCount;
+    let stackStep = Math.PI / stackCount;
+    let sectorAngle, stackAngle;
+
+    let vertices = [];
+
+    for (let i = 0; i <= stackCount; i++) {
+        stackAngle = Math.PI / 2 - i * stackStep;
+        xy = radius * Math.cos(stackAngle);
+        z = radius * Math.sin(stackAngle);
+
+        for (let j = 0; j <= sectorCount; ++j) {
+            sectorAngle = j * sectorStep;
+
+            x = xy * Math.cos(sectorAngle);
+            y = xy * Math.sin(sectorAngle);
+            vertices.push(x);
+            vertices.push(y);
+            vertices.push(z);
+        }
+    }
+
+    colors = [];
+    let length = vertices.length
+    for (let i = 0; i < vertices.length; i++) {
+        colors.push(
+            ...[
+                i / length,
+                i / length,
+                i / length
+            ]
+        )
+    }
+
+    indices = [];
+
+    let k1, k2;
+    for (let i = 0; i < stackCount; i++) {
+        k1 = i * (sectorCount + 1);     // beginning of current stack
+        k2 = k1 + sectorCount + 1;      // beginning of next stack
+
+        for (let j = 0; j < sectorCount; j++, k1++, k2++) {
+            // k1 => k2 => k1+1
+            if (i != 0) {
+                indices.push(k1);
+                indices.push(k2);
+                indices.push(k1 + 1);
+            }
+
+            // k1+1 => k2 => k2+1
+            if (i != (stackCount - 1)) {
+                indices.push(k1 + 1);
+                indices.push(k2);
+                indices.push(k2 + 1);
+            }
+        }
+    }
+
+    return {
+        vertices: vertices,
+        indices: indices,
+        colors: colors
+    }
+
+}
+
 window.onload = function init() {
     const program = getProgram();
 
+
+    sphereProps = createSphere(20);
+    const sphere = new CanvasObject(sphereProps.vertices, sphereProps.colors, sphereProps.indices);
+    sphere.initSelf(canvas, gl, program);
+
     const cube = new CanvasObject(cubeProps.vertices, cubeProps.colors, cubeProps.indices);
     cube.initSelf(canvas, gl, program);
-    cube.translate(gl, [-2, 0, 0]);
+    cube.translate(gl, [-3, 0, 0]);
 
-    const secondCube = new CanvasObject(cubeProps.vertices, cubeProps.colors, cubeProps.indices);
-    secondCube.initSelf(canvas, gl, program);
-    secondCube.translate(gl, [3, 0, 0]);
+    const pyramid = new CanvasObject(pyramidProps.vertices, pyramidProps.colors, pyramidProps.indices);
+    pyramid.initSelf(canvas, gl, program);
+    pyramid.translate(gl, [3, 0, 0]);
     
     let angle;
     function render() {
         angle = (performance.now() / 1000) / 6 * (2 * Math.PI);
 
-        gl.clearColor(0.5, 0.5, 0.5, 1);
+        gl.clearColor(0.9, 0.9, 0.9, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
         
-        cube.rotate(gl, identityMatrix, angle, [0, 1, 0]);
+
+        sphere.activateSelf(gl, program);
+        sphere.rotate(gl, identityMatrix, angle, [1, -1, 0]);
+        sphere.drawSelf(gl);
+
         cube.activateSelf(gl, program);
+        cube.rotate(gl, identityMatrix, angle, [0, 1, .3]);
         cube.drawSelf(gl);
         
-        secondCube.rotate(gl, identityMatrix, angle, [0, -1, -2]);
-        secondCube.activateSelf(gl, program);
-        secondCube.drawSelf(gl);
+        pyramid.activateSelf(gl, program);
+        pyramid.rotate(gl, identityMatrix, angle, [0, -1, 0]);
+        pyramid.drawSelf(gl);
 
         requestAnimationFrame(render);
     }
