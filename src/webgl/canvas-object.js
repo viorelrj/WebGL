@@ -1,10 +1,6 @@
 import {ArrayBuffer, IndexBuffer} from './buffer';
 import {GLSLVarMat4, GLSLVarVec3} from './primitives';
 
-function setPerspective(canvas, obj) {
-    glMatrix.mat4.lookAt(obj.viewMatrix, [0, 0, 15], [0, 0, 0], [0, 1, 0]);
-    glMatrix.mat4.perspective(obj.projectionMatrix, radians(45), canvas.width / canvas.height, 0.1, 1000.0);
-}
 
 class CanvasObject {
     constructor(vertices = [], colors = [], indices = []) {
@@ -12,16 +8,17 @@ class CanvasObject {
         this.colors = colors;
         this.indices = indices;
 
-        this.scaleProps = [1, 1, 1]
-        this.translationProps = [0, 0, 0];
-        this.rotationProps = [0, 0, 0];
-
         this.verticesBuffer = null;
         this.colorsBuffer = null;
         this.indicesBuffer = null;
 
+        this.scaleProps = [1, 1, 1]
+        this.translationProps = [0, 0, 0];
+        this.rotationProps = [0, 0, 0];
+
         this.viewMatrix = null;
         this.projectionMatrix = null;
+
 
         this.glsl_viewMatrix = null;
         this.glsl_projectionMatrix = null;
@@ -58,11 +55,13 @@ class CanvasObject {
         return this.colors;
     }
 
-    setProp(property, vec) {
+
+
+    _setProp(property, vec) {
         this[property] = vec;
     }
 
-    warpProp(property, vec) {
+    _warpProp(property, vec) {
         this[property] = [
             this[property][0] + vec[0],
             this[property][1] + vec[1],
@@ -70,32 +69,31 @@ class CanvasObject {
         ];
     }
 
-    // Translator: js array of floats with x, y, z values for translations
     translateBy(translator) {
-        this.warpProp('translationProps', translator);
+        this._warpProp('translationProps', translator);
     }
 
     translateSet(translator) {
-        this.setProp('translationProps', translator)
+        this._setProp('translationProps', translator)
     }
 
     scaleBy(scaler) {
-        this.warpProp('scaleProps', scaler);
+        this._warpProp('scaleProps', scaler);
     }
 
     scaleSet(scaler) {
-        this.setProp('scaleProps', scaler);
+        this._setProp('scaleProps', scaler);
     }
 
     rotateBy(scaler) {
-        this.warpProp('rotationProps', scaler);
+        this._warpProp('rotationProps', scaler);
     }
 
     rotateSet(scaler) {
-        this.setProp('rotationProps', scaler);
+        this._setProp('rotationProps', scaler);
     }
 
-    initSelf(canvas, gl, program) {
+    initSelf(gl, program) {
         this.initBuffer(gl);
 
         this.glsl_projectionMatrix = new GLSLVarMat4(gl, program, 'projectionMatrix');
@@ -107,11 +105,9 @@ class CanvasObject {
 
         this.viewMatrix = new glMatrix.mat4.create();
         this.projectionMatrix = new glMatrix.mat4.create();
-
-        setPerspective(canvas, this);
     }
 
-    activateSelf(gl, program) {
+    drawSelf(gl, program, camera) {
         this.uploadSelfToBuffer(gl);
         this.indicesBuffer.activate(gl);
 
@@ -125,14 +121,15 @@ class CanvasObject {
         gl.vertexAttribPointer(color, 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(color);
 
+        this.viewMatrix = camera.getWarpedView(this.viewMatrix);
+        this.projectionMatrix = camera.getWarpedProjection(this.projectionMatrix);
+
         this.glsl_viewMatrix.upload(gl, this.viewMatrix);
         this.glsl_projectionMatrix.upload(gl, this.projectionMatrix);
         this.glsl_scaleProps.upload(gl, this.scaleProps);
         this.glsl_translationProps.upload(gl, this.translationProps);
         this.glsl_rotationProps.upload(gl, this.rotationProps);
-    }
 
-    drawSelf(gl) {
         gl.drawElements(gl.TRIANGLES, this.getIndicesLength(), gl.UNSIGNED_SHORT, 0);
     }
 }

@@ -1,10 +1,9 @@
-let gl;
-let canvas;
-
 import { cubeProps, pyramidProps } from './consts.js';
 import { CanvasObject } from './webgl/canvas-object';
+import { Camera } from './webgl/camera';
 
-
+let gl;
+let canvas;
 
 function getProgram() {
     canvas = document.getElementById("gl-canvas");
@@ -23,90 +22,20 @@ function getProgram() {
     return program;
 }
 
-function createSphere(precision = 3, radius = 1) {
-    let x, y, z, xy;
-
-    let sectorCount = precision;
-    let stackCount = precision;
-
-    let sectorStep = 2 * Math.PI / sectorCount;
-    let stackStep = Math.PI / stackCount;
-    let sectorAngle, stackAngle;
-
-    let vertices = [];
-    for (let i = 0; i <= stackCount; i++) {
-        stackAngle = Math.PI / 2 - i * stackStep;
-        xy = radius * Math.cos(stackAngle);
-        z = radius * Math.sin(stackAngle);
-
-        for (let j = 0; j <= sectorCount; ++j) {
-            sectorAngle = j * sectorStep;
-
-            x = xy * Math.cos(sectorAngle);
-            y = xy * Math.sin(sectorAngle);
-            vertices.push(x);
-            vertices.push(y);
-            vertices.push(z);
-        }
-    }
-
-    colors = [];
-    let length = vertices.length
-    for (let i = 0; i < vertices.length; i++) {
-        colors.push(
-            ...[
-                Math.random() * 10 * i / length,
-                Math.random() * 10 * i / length,
-                Math.random() * 10 * i / length
-            ]
-        )
-    }
-
-    indices = [];
-
-    let k1, k2;
-    for (let i = 0; i < stackCount; i++) {
-        k1 = i * (sectorCount + 1);
-        k2 = k1 + sectorCount + 1;
-
-        for (let j = 0; j < sectorCount; j++ , k1++ , k2++) {
-            if (i != 0) {
-                indices.push(k1);
-                indices.push(k2);
-                indices.push(k1 + 1);
-            }
-
-            if (i != (stackCount - 1)) {
-                indices.push(k1 + 1);
-                indices.push(k2);
-                indices.push(k2 + 1);
-            }
-        }
-    }
-
-    return {
-        vertices: vertices,
-        indices: indices,
-        colors: colors
-    }
-
-}
-
 window.onload = function init() {
     const program = getProgram();
 
-    const cube = new CanvasObject(cubeProps.vertices, cubeProps.colors, cubeProps.indices);
+    const camera = new Camera([0, 0, 15], [0, 0, 0], [0, 1, 0], canvas.width, canvas.height);
 
-    cube.initSelf(canvas, gl, program);
+    const cube = new CanvasObject(cubeProps.vertices, cubeProps.colors, cubeProps.indices);
+    cube.initSelf(gl, program);
 
 
     function render() {
-
         gl.clearColor(0.9, 0.9, 0.9, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        cube.activateSelf(gl, program);
-        cube.drawSelf(gl);
+        cube.drawSelf(gl, program, camera);
 
         requestAnimationFrame(render);
     }
