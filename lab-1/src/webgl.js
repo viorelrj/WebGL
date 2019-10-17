@@ -1,97 +1,6 @@
-let gl;
-let canvas;
-
-const identityMatrix = glMatrix.mat4.create();
-
-const cubeProps = {
-    vertices: [
-        // Face
-        ...[-1, -1, -1],
-        ...[1, -1, -1],
-        ...[1, 1, -1],
-        ...[-1, 1, -1],
-
-        // Back
-
-        ...[1, -1, 1],
-        ...[-1, -1, 1],
-        ...[-1, 1, 1],
-        ...[1, 1, 1]
-    ],
-
-    indices: [
-        // Front
-        ...[0, 1, 2],
-        ...[0, 2, 3],
-
-        // Right
-        ...[1, 4, 7],
-        ...[1, 7, 2],
-
-        // Left
-        ...[5, 0, 3],
-        ...[5, 3, 6],
-
-        // Top
-        ...[3, 2, 7],
-        ...[3, 7, 6],
-
-        // Bottom
-        ...[1, 0, 5],
-        ...[1, 5, 4],
-
-        // Back
-        ...[4, 5, 6],
-        ...[4, 6, 7]
-    ],
-
-    colors: [
-        ...[0, 0, 0],
-        ...[0, 0, 1],
-        ...[0, 1, 0],
-        ...[0, 1, 1],
-
-        ...[1, 0, 0],
-        ...[1, 0, 1],
-        ...[1, 1, 0],
-        ...[1, 1, 1],
-
-    ]
-}
-
-const pyramidProps = {
-    vertices: [
-        // top
-        ...[0, 1, 0],
-
-        // Front left
-        ...[0.5, 0, -0.5],
-
-        // Front right
-        ...[0.5, 0, -0.5],
-
-        // back right
-        ...[0.5, 0, 0.5],
-
-        // back left
-        ...[-0.5, 0, 0.5],
-    ],
-
-    indices: [
-        ...[4, 2, 1],
-        ...[4, 3, 2],
-        ...[1, 2, 0],
-        ...[2, 3, 0],
-        ...[3, 4, 0],
-        ...[4, 1, 0],
-    ],
-    colors: [
-        ...[1, .75, 0.796078],
-        ...[1, 1, 0],
-        ...[1, 1, 0],
-        ...[1, 1, 0],
-        ...[1, 1, 0],
-    ]
+function setPerspective(canvas, obj) {
+    glMatrix.mat4.lookAt(obj.viewMatrix, [0, 0, 15], [0, 0, 0], [0, 1, 0]);
+    glMatrix.mat4.perspective(obj.projectionMatrix, radians(45), canvas.width / canvas.height, 0.1, 1000.0);
 }
 
 class Buffer {
@@ -101,7 +10,7 @@ class Buffer {
     }
 
     upload(gl, data) {
-        const type = (this.target === gl.ELEMENT_ARRAY_BUFFER)? Uint16Array : Float32Array;
+        const type = (this.target === gl.ELEMENT_ARRAY_BUFFER) ? Uint16Array : Float32Array;
 
         // Make the buffer active
         gl.bindBuffer(this.target, this.id);
@@ -139,7 +48,7 @@ class IndexBuffer extends Buffer {
 }
 
 class GLSLVar {
-    constructor (gl, program, name) {
+    constructor(gl, program, name) {
         this.id = gl.getUniformLocation(program, name);
     }
 
@@ -175,7 +84,7 @@ class CanvasObject {
         this.glsl_rotationMatrix = null;
     }
 
-    initBuffer() {
+    initBuffer(gl) {
         this.verticesBuffer = new ArrayBuffer(gl);
         this.colorsBuffer = new ArrayBuffer(gl);
         this.indicesBuffer = new IndexBuffer(gl);
@@ -214,7 +123,7 @@ class CanvasObject {
     }
 
     setScale(...props) {
-        if (props.length  == 1) {
+        if (props.length == 1) {
             this.scale.x = props[0];
             this.scale.y = props[0];
             this.scale.z = props[0];
@@ -236,7 +145,7 @@ class CanvasObject {
     }
 
     initSelf(canvas, gl, program) {
-        this.initBuffer();
+        this.initBuffer(gl);
 
         this.glsl_projectionMatrix = new GLSLVar(gl, program, 'projectionMatrix');
         this.glsl_viewMatrix = new GLSLVar(gl, program, 'viewMatrix');
@@ -276,117 +185,9 @@ class CanvasObject {
     }
 }
 
-function getProgram() {
-    canvas = document.getElementById("gl-canvas");
-
-    gl = WebGLUtils.setupWebGL(canvas);
-    if (!gl) { alert("WebGL isn't available"); }
-
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(1.0, 1.0, 1.0, 1.0);
-
-    gl.enable(gl.DEPTH_TEST);
-
-    let program = initShaders(gl, "vertex-shader", "fragment-shader");
-    gl.useProgram(program);
-
-    return program;
-}
-
-function setPerspective(canvas, obj) {
-    glMatrix.mat4.lookAt(obj.viewMatrix, [0, 0, 15], [0, 0, 0], [0, 1, 0]);
-    glMatrix.mat4.perspective(obj.projectionMatrix, radians(45), canvas.width / canvas.height, 0.1, 1000.0);
-}
-
-function createSphere(precision = 3, radius = 1) {
-    let x, y, z, xy;
-
-    let sectorCount = precision;
-    let stackCount = precision;
-
-    let sectorStep = 2 * Math.PI / sectorCount;
-    let stackStep = Math.PI / stackCount;
-    let sectorAngle, stackAngle;
-
-    let vertices = [];
-    for (let i = 0; i <= stackCount; i++) {
-        stackAngle = Math.PI / 2 - i * stackStep;
-        xy = radius * Math.cos(stackAngle);
-        z = radius * Math.sin(stackAngle);
-
-        for (let j = 0; j <= sectorCount; ++j) {
-            sectorAngle = j * sectorStep;
-
-            x = xy * Math.cos(sectorAngle);
-            y = xy * Math.sin(sectorAngle);
-            vertices.push(x);
-            vertices.push(y);
-            vertices.push(z);
-        }
-    }
-
-    colors = [];
-    let length = vertices.length
-    for (let i = 0; i < vertices.length; i++) {
-        colors.push(
-            ...[
-                Math.random() * 10 * i / length,
-                Math.random() * 10 * i / length,
-                Math.random() * 10 * i / length
-            ]
-        )
-    }
-
-    indices = [];
-
-    let k1, k2;
-    for (let i = 0; i < stackCount; i++) {
-        k1 = i * (sectorCount + 1);
-        k2 = k1 + sectorCount + 1;
-
-        for (let j = 0; j < sectorCount; j++, k1++, k2++) {
-            if (i != 0) {
-                indices.push(k1);
-                indices.push(k2);
-                indices.push(k1 + 1);
-            }
-
-            if (i != (stackCount - 1)) {
-                indices.push(k1 + 1);
-                indices.push(k2);
-                indices.push(k2 + 1);
-            }
-        }
-    }
-
-    return {
-        vertices: vertices,
-        indices: indices,
-        colors: colors
-    }
-
-}
-
-window.onload = function init() {
-    const program = getProgram();
-
-    const cube = new CanvasObject(cubeProps.vertices, cubeProps.colors, cubeProps.indices);
-    cube.initSelf(canvas, gl, program);
-
-    let angle;
-    function render() {
-        angle = (performance.now() / 1000) / 6 * (2 * Math.PI);
-
-        gl.clearColor(0.9, 0.9, 0.9, 1);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        cube.activateSelf(gl, program);
-        cube.rotate(gl, identityMatrix, angle, [0, 1, .3]);
-        cube.drawSelf(gl);
-
-
-        requestAnimationFrame(render);
-    }
-
-    this.requestAnimationFrame(render);
+export {
+    ArrayBuffer,
+    IndexBuffer,
+    GLSLVar,
+    CanvasObject
 }
