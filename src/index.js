@@ -1,10 +1,8 @@
 let gl;
 let canvas;
 
-const identityMatrix = glMatrix.mat4.create();
-
 import { cubeProps, pyramidProps } from './consts.js';
-import { ArrayBuffer, IndexBuffer, GLSLVar, CanvasObject } from './webgl';
+import { CanvasObject } from './webgl/canvas-object';
 
 
 
@@ -23,11 +21,6 @@ function getProgram() {
     gl.useProgram(program);
 
     return program;
-}
-
-function setPerspective(canvas, obj) {
-    glMatrix.mat4.lookAt(obj.viewMatrix, [0, 0, 15], [0, 0, 0], [0, 1, 0]);
-    glMatrix.mat4.perspective(obj.projectionMatrix, radians(45), canvas.width / canvas.height, 0.1, 1000.0);
 }
 
 function createSphere(precision = 3, radius = 1) {
@@ -103,19 +96,17 @@ window.onload = function init() {
     const program = getProgram();
 
     const cube = new CanvasObject(cubeProps.vertices, cubeProps.colors, cubeProps.indices);
+
     cube.initSelf(canvas, gl, program);
 
-    let angle;
+
     function render() {
-        angle = (performance.now() / 1000) / 6 * (2 * Math.PI);
 
         gl.clearColor(0.9, 0.9, 0.9, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         cube.activateSelf(gl, program);
-        cube.rotate(gl, identityMatrix, angle, [0, 1, .3]);
         cube.drawSelf(gl);
-
 
         requestAnimationFrame(render);
     }
