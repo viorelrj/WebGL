@@ -72,8 +72,28 @@ class Camera {
         this.up = vec;
     }
 
+    setUpX(value) {
+        this.up[0] = value;
+    }
+
+    setUpY(value) {
+        this.up[1] = value;
+    }
+
+    setUpZ(value) {
+        this.up[2] = value;
+    }
+
     setAspectRatio(x, y) {
         this.viewWidth = x;
+        this.viewHeight = y;
+    }
+
+    setWidth(x) {
+        this.viewWidth = x;
+    }
+
+    setHeight(y) {
         this.viewHeight = y;
     }
 
@@ -85,6 +105,15 @@ class Camera {
         this.closest = close;
         this.furthest = far;
     }
+
+    setClose(close) {
+        this.closest = close;
+    }
+
+    setFar(far) {
+        this.furthest = far;
+    }
+
 }
 
 export {
