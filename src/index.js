@@ -107,7 +107,7 @@ window.onload = function init() {
         const input = inputs_dispatchCamera[i];
 
         input.addEventListener('change', function(e) {
-            const value = input.value;
+            const value = parseFloat(input.value);
             const method = e.target.getAttribute('data-method');
 
             scene.dispatchCamera(
