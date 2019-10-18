@@ -116,7 +116,7 @@ function createSphere(precision = 3, radius = 1) {
         }
     }
 
-    colors = [];
+    let colors = [];
     let length = vertices.length
     for (let i = 0; i < vertices.length; i++) {
         colors.push(
@@ -128,7 +128,7 @@ function createSphere(precision = 3, radius = 1) {
         )
     }
 
-    indices = [];
+    let indices = [];
 
     let k1, k2;
     for (let i = 0; i < stackCount; i++) {
@@ -158,4 +158,6 @@ function createSphere(precision = 3, radius = 1) {
 
 }
 
-export {cubeProps, pyramidProps, createSphere};
+const sphereProps = createSphere(20, 1);
+
+export {cubeProps, pyramidProps, sphereProps};

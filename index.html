@@ -83,7 +83,41 @@ void main(void) {
     <canvas id="gl-canvas" width="512" height=" 512">
         Oops ... your browser doesn't support the HTML5 canvas element
     </canvas>
+    <div class="controls">
+        <div class="controls__add">
+            <label for="object-type">I would like to add a: </label>
+            <select name="object" id="object-type">
+                <option value="cube">Cube</option>
+                <option value="sphere">Sphere</option>
+                <option value="pyramid">Pyramid</option>
+            </select>
+            <button id="add-object">Do it!</button>
+        </div>
+        <div class="controls__modifications">
+            <label for="object-index"> Make </label>
+            <select name="object-index" id="object-index">
+            </select>
 
+            <div class="controls__translate">
+                <p>Translate:</p>
+                <div>
+                    <span>By axis X:</span>
+                    <button class="js-translate-button" data-method="translateBy" data-axis-index="0" data-direction="-1">-</button>
+                    <button class="js-translate-button" data-method="translateBy" data-axis-index="0" data-direction="1">+</button>
+                </div>
+                <div>
+                    <span>By axis Y:</span>
+                    <button class="js-translate-button" data-method="translateBy" data-axis-index="1" data-direction="-1">-</button>
+                    <button class="js-translate-button" data-method="translateBy" data-axis-index="1" data-direction="1">+</button>
+                </div>
+                <div>
+                    <span>By axis Z:</span>
+                    <button class="js-translate-button" data-method="translateBy" data-axis-index="2" data-direction="-1">-</button>
+                    <button class="js-translate-button" data-method="translateBy" data-axis-index="2" data-direction="1">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

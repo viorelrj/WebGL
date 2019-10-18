@@ -85,12 +85,12 @@ class CanvasObject {
         this._setProp('scaleProps', scaler);
     }
 
-    rotateBy(scaler) {
-        this._warpProp('rotationProps', scaler);
+    rotateBy(rotator) {
+        this._warpProp('rotationProps', rotator);
     }
 
-    rotateSet(scaler) {
-        this._setProp('rotationProps', scaler);
+    rotateSet(rotator) {
+        this._setProp('rotationProps', rotator);
     }
 
     initSelf(gl, program) {
