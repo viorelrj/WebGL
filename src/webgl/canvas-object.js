@@ -7,7 +7,9 @@ class CanvasObject {
         this.vertices = vertices;
         this.colors = colors;
         this.indices = indices;
-        this.normals = colors;
+        this.normals = this.fillNormals();
+        this.unoptimizedVertices = this.getUnoptimizedVertices();
+        this.unoptimizedColors = this.getUnoptimizedColors();
 
         this.verticesBuffer = null;
         this.colorsBuffer = null;
@@ -51,9 +53,39 @@ class CanvasObject {
 
         for (let triangle of triangles) {
             normals.push(...calculateNormal(triangle[0], triangle[1], triangle[2]));
+            normals.push(...calculateNormal(triangle[0], triangle[1], triangle[2]));
+            normals.push(...calculateNormal(triangle[0], triangle[1], triangle[2]));
         }
 
         return normals;
+    }
+
+    getUnoptimizedVertices() {
+        const verts = [];
+        
+        for (let i = 0; i < this.indices.length; i++) {
+            verts.push(
+                this.vertices[this.indices[i]*3],
+                this.vertices[this.indices[i]*3 + 1],
+                this.vertices[this.indices[i]*3 + 2]
+            )
+        }
+
+        return verts;
+    }
+
+    getUnoptimizedColors() {
+        const colors = [];
+
+        for (let i = 0; i < this.indices.length; i++) {
+            colors.push(
+                this.colors[this.indices[i] * 3],
+                this.colors[this.indices[i] * 3 + 1],
+                this.colors[this.indices[i] * 3 + 2]
+            )
+        }
+
+        return colors;
     }
 
     getPoint(index) {
@@ -79,7 +111,6 @@ class CanvasObject {
         return triangles;
     }
 
-
     initBuffer(gl) {
         this.verticesBuffer = new ArrayBuffer(gl);
         this.colorsBuffer = new ArrayBuffer(gl);
@@ -88,6 +119,7 @@ class CanvasObject {
     }
 
     uploadSelfToBuffer(gl) {
+
         this.verticesBuffer.upload(gl, this.getVertices());
         this.colorsBuffer.upload(gl, this.getColors());
         this.indicesBuffer.upload(gl, this.getIndices());
@@ -95,7 +127,7 @@ class CanvasObject {
     }
 
     getVertices() {
-        return this.vertices;
+        return this.unoptimizedVertices;
     }
 
     getIndices() {
@@ -103,7 +135,6 @@ class CanvasObject {
     }
 
     getNormals() {
-        // console.log(this.normals);
         return this.normals;
     }
 
@@ -112,10 +143,8 @@ class CanvasObject {
     }
 
     getColors() {
-        return this.colors;
+        return this.unoptimizedColors;
     }
-
-
 
     _setProp(property, vec) {
         this[property] = vec;
@@ -165,13 +194,42 @@ class CanvasObject {
 
         this.viewMatrix = new glMatrix.mat4.create();
         this.projectionMatrix = new glMatrix.mat4.create();
-
-        console.log(this.colors);
     }
 
-    drawSelf(gl, program, camera) {
+    drawSelfElements(gl, program, camera) {
         this.uploadSelfToBuffer(gl);
         this.indicesBuffer.activate(gl);
+
+        this.verticesBuffer.activate(gl);
+        const coord = gl.getAttribLocation(program, 'coordinates');
+        gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(coord);
+
+        this.colorsBuffer.activate(gl);
+        const color = gl.getAttribLocation(program, 'color');
+        gl.vertexAttribPointer(color, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(color);
+
+        this.normalsBuffer.activate(gl);
+        const normals = gl.getAttribLocation(program, 'normals');
+        gl.vertexAttribPointer(normals, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(normals);
+
+        this.viewMatrix = camera.getWarpedView(this.viewMatrix);
+        this.projectionMatrix = camera.getWarpedProjection(this.projectionMatrix);
+
+
+        this.glsl_viewMatrix.upload(gl, this.viewMatrix);
+        this.glsl_projectionMatrix.upload(gl, this.projectionMatrix);
+        this.glsl_scaleProps.upload(gl, this.scaleProps);
+        this.glsl_translationProps.upload(gl, this.translationProps);
+        this.glsl_rotationProps.upload(gl, this.rotationProps);
+
+        gl.drawElements(gl.TRIANGLES, this.getIndicesLength(), gl.UNSIGNED_SHORT, 0);
+    }
+
+    drawSelfTriangles(gl, program, camera) {
+        this.uploadSelfToBuffer(gl);
 
         this.verticesBuffer.activate(gl);
         const coord = gl.getAttribLocation(program, 'coordinates');
@@ -197,7 +255,11 @@ class CanvasObject {
         this.glsl_translationProps.upload(gl, this.translationProps);
         this.glsl_rotationProps.upload(gl, this.rotationProps);
 
-        gl.drawElements(gl.TRIANGLES, this.getIndicesLength(), gl.UNSIGNED_SHORT, 0);
+        gl.drawArrays(gl.TRIANGLES, 0, this.getVertices().length);
+    }
+
+    drawSelf(gl, program, camera) {
+        this.drawSelfTriangles(gl, program, camera)
     }
 }
 

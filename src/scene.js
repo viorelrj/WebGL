@@ -28,7 +28,7 @@ class Scene {
     constructor (gl, canvas, program) {
         this.objectList = [];
         this.selectedIndex = 0;
-        this.camera = new Camera([0, 0, 15], [0, 0, 0], [0, 1, 0], canvas.width, canvas.height);;
+        this.camera = new Camera([0, 0, -15], [0, 0, 0], [0, 1, 0], canvas.width, canvas.height);;
     }
 
     addObject(gl, program, type) {
@@ -161,6 +161,7 @@ class Scene {
 
     drawAll(gl, program) {
         for (let sceneObject of this.objectList) {
+            sceneObject.self.rotateBy([.1, .2, .3])
             sceneObject.self.drawSelf(gl, program, this.camera);
         }
     }
