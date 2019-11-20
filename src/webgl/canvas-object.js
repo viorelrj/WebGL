@@ -7,10 +7,12 @@ class CanvasObject {
         this.vertices = vertices;
         this.colors = colors;
         this.indices = indices;
+        this.normals = colors;
 
         this.verticesBuffer = null;
         this.colorsBuffer = null;
         this.indicesBuffer = null;
+        this.normalsBuffer = null;
 
         this.scaleProps = [1, 1, 1]
         this.translationProps = [0, 0, 0];
@@ -27,16 +29,69 @@ class CanvasObject {
         this.glsl_rotationProps = null;
     }
 
+    fillNormals() {
+        const triangles = this.getTriangles();
+        let normals = []
+
+        function calculateNormal(a, b, c) {
+            // 3 main lines of NORMALS CALCULATION FOR 1 TRIANGLE WITH VERTICES a, b, c!
+            let t1 = glMatrix.vec3.create();
+            let t2 = glMatrix.vec3.create();
+            let normal = glMatrix.vec3.create();
+
+            glMatrix.vec3.subtract(t1, b, a);
+            glMatrix.vec3.subtract(t2, c, a);
+
+            glMatrix.vec3.cross(normal, t2, t1);
+            glMatrix.vec3.normalize(normal, normal);
+
+            // converting vec3 to vec4, not needed if you send only vec3 to shaders, needed otherwise
+            return normal;
+        }
+
+        for (let triangle of triangles) {
+            normals.push(...calculateNormal(triangle[0], triangle[1], triangle[2]));
+        }
+
+        return normals;
+    }
+
+    getPoint(index) {
+        index *= 3;
+        return glMatrix.vec3.fromValues(
+            this.vertices[index],
+            this.vertices[index + 1],
+            this.vertices[index + 2],
+        )
+    }
+
+    getTriangles() {
+        let triangles = [];
+
+        for (let i = 0; i < this.indices.length; i += 3) {;
+            triangles.push([
+                this.getPoint(this.indices[i]),
+                this.getPoint(this.indices[i + 1]),
+                this.getPoint(this.indices[i + 2])
+            ]);
+        }
+
+        return triangles;
+    }
+
+
     initBuffer(gl) {
         this.verticesBuffer = new ArrayBuffer(gl);
         this.colorsBuffer = new ArrayBuffer(gl);
         this.indicesBuffer = new IndexBuffer(gl);
+        this.normalsBuffer = new ArrayBuffer(gl);
     }
 
     uploadSelfToBuffer(gl) {
         this.verticesBuffer.upload(gl, this.getVertices());
         this.colorsBuffer.upload(gl, this.getColors());
         this.indicesBuffer.upload(gl, this.getIndices());
+        this.normalsBuffer.upload(gl, this.getNormals());
     }
 
     getVertices() {
@@ -45,6 +100,11 @@ class CanvasObject {
 
     getIndices() {
         return this.indices;
+    }
+
+    getNormals() {
+        // console.log(this.normals);
+        return this.normals;
     }
 
     getIndicesLength() {
@@ -105,6 +165,8 @@ class CanvasObject {
 
         this.viewMatrix = new glMatrix.mat4.create();
         this.projectionMatrix = new glMatrix.mat4.create();
+
+        console.log(this.colors);
     }
 
     drawSelf(gl, program, camera) {
@@ -120,6 +182,11 @@ class CanvasObject {
         const color = gl.getAttribLocation(program, 'color');
         gl.vertexAttribPointer(color, 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(color);
+
+        this.normalsBuffer.activate(gl);
+        const normals = gl.getAttribLocation(program, 'normals');
+        gl.vertexAttribPointer(normals, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(normals);
 
         this.viewMatrix = camera.getWarpedView(this.viewMatrix);
         this.projectionMatrix = camera.getWarpedProjection(this.projectionMatrix);

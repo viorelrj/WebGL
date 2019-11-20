@@ -6,7 +6,6 @@ class Buffer {
 
     upload(gl, data) {
         const type = (this.target === gl.ELEMENT_ARRAY_BUFFER) ? Uint16Array : Float32Array;
-
         // Make the buffer active
         gl.bindBuffer(this.target, this.id);
         // Upload data to buffer
