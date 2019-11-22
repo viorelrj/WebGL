@@ -57,11 +57,14 @@ class CanvasObject {
 
             this.vertices = _vertices;
             this.colors = _colors;
-            this.normals = _colors;
+            this.normals = this.getStandartNormals();
+
+            console.log(this.normals.length);
+            console.log(this.vertices.length);
         }
     }
 
-    fillNormals() {
+    getStandartNormals() {
         const triangles = this.getTriangles();
         let normals = []
 
@@ -82,6 +85,9 @@ class CanvasObject {
         }
 
         for (let triangle of triangles) {
+            console.log(triangle, calculateNormal(triangle[0], triangle[1], triangle[2]));
+            normals.push(...calculateNormal(triangle[0], triangle[1], triangle[2]));
+            normals.push(...calculateNormal(triangle[0], triangle[1], triangle[2]));
             normals.push(...calculateNormal(triangle[0], triangle[1], triangle[2]));
         }
 
@@ -91,7 +97,7 @@ class CanvasObject {
     getPoint(index) {
         index *= 3;
         return glMatrix.vec3.fromValues(
-            this.vertices[index],
+            this.vertices[index + 0],
             this.vertices[index + 1],
             this.vertices[index + 2],
         )
@@ -100,11 +106,11 @@ class CanvasObject {
     getTriangles() {
         let triangles = [];
 
-        for (let i = 0; i < this.indices.length; i += 3) {;
+        for (let i = 0; i < this.vertices.length / 3; i += 3) {
             triangles.push([
-                this.getPoint(this.indices[i]),
-                this.getPoint(this.indices[i + 1]),
-                this.getPoint(this.indices[i + 2])
+                this.getPoint(i + 0),
+                this.getPoint(i + 1),
+                this.getPoint(i + 2)
             ]);
         }
 
@@ -138,7 +144,6 @@ class CanvasObject {
     }
 
     getNormals() {
-        // console.log(this.normals);
         return this.normals;
     }
 

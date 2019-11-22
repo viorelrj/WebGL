@@ -5,6 +5,7 @@
 attribute vec3 coordinates;
 attribute vec3 normals;
 attribute vec3 color;
+uniform vec3 lightPosition;
 
 uniform vec3 scaleProps;
 uniform vec3 translationProps;
@@ -14,6 +15,8 @@ uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
 
 varying vec3 vColor;
+varying vec3 vSurfaceToLight;
+varying vec3 vNormal;
 
 void main(void) {
     mat4 VP = projectionMatrix * viewMatrix;
@@ -58,9 +61,15 @@ void main(void) {
     );
 
     mat4 rotationMatrix = rz * ry * rx;
+    mat4 worldMatrix = VP * translateMatrix * rotationMatrix * scaleMatrix;
 
-    gl_Position = VP * translateMatrix * rotationMatrix * scaleMatrix * vec4(coordinates, 1.0);
+    vec3 surfacePosition = (worldMatrix * vec4(coordinates, 1.0)).xyz;
+
+
+    gl_Position = worldMatrix * vec4(coordinates, 1.0);
     vColor = color;
+    vSurfaceToLight = lightPosition - surfacePosition;
+    vNormal = normals;
 }
 </script>
 
@@ -68,9 +77,11 @@ void main(void) {
 precision mediump float;
 
 varying vec3 vColor;
+varying vec3 vNormal;
+varying vec3 vSurfaceToLight;
 
 void main(void) {
-    gl_FragColor = vec4(vColor, 1.0);
+    gl_FragColor = vec4(vNormal, 1.0);
 }
 </script>
 
