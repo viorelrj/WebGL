@@ -33,7 +33,7 @@ class Scene {
 
     addObject(gl, program, type) {
         const object = objectMap[type];
-        const drawable = new CanvasObject(object.self.vertices, object.self.colors, object.self.indices);
+        const drawable = new CanvasObject(object.self.vertices, object.self.colors, object.self.indices, [], false);
         drawable.initSelf(gl, program);
 
         this.objectList.push(

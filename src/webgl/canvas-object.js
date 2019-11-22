@@ -3,11 +3,11 @@ import {GLSLVarMat4, GLSLVarVec3} from './primitives';
 
 
 class CanvasObject {
-    constructor(vertices = [], colors = [], indices = []) {
-        this.vertices = vertices;
-        this.colors = colors;
-        this.indices = indices;
-        this.normals = colors;
+    constructor(vertices = [], colors = [], indices = [], normals=[], VBO = true) {
+        this.meta = {}
+        this.meta.isVBO = VBO;
+
+        this.setVertices(vertices, indices, colors, normals);
 
         this.verticesBuffer = null;
         this.colorsBuffer = null;
@@ -27,6 +27,38 @@ class CanvasObject {
         this.glsl_scaleProps = null;
         this.glsl_translationProps = null;
         this.glsl_rotationProps = null;
+    }
+
+    setVertices(vertices, indices, colors, normals) {
+        if (this.meta.isVBO) {
+            this.vertices = vertices;
+            this.indices = indices;
+            this.colors = colors;
+            this.normals = normals;
+        } else {
+            this.indices = indices;
+
+            const _vertices = [];
+            const _colors = []
+            
+            for (let i = 0; i < indices.length; i++) {
+                _vertices.push(
+                    vertices[indices[i] * 3 + 0],
+                    vertices[indices[i] * 3 + 1],
+                    vertices[indices[i] * 3 + 2]
+                )
+
+                _colors.push(
+                    colors[indices[i] * 3 + 0],
+                    colors[indices[i] * 3 + 1],
+                    colors[indices[i] * 3 + 2]
+                )
+            }
+
+            this.vertices = _vertices;
+            this.colors = _colors;
+            this.normals = _colors;
+        }
     }
 
     fillNormals() {
@@ -79,7 +111,6 @@ class CanvasObject {
         return triangles;
     }
 
-
     initBuffer(gl) {
         this.verticesBuffer = new ArrayBuffer(gl);
         this.colorsBuffer = new ArrayBuffer(gl);
@@ -96,6 +127,10 @@ class CanvasObject {
 
     getVertices() {
         return this.vertices;
+    }
+
+    getVerticesLength() {
+        return this.vertices.length;
     }
 
     getIndices() {
@@ -165,8 +200,6 @@ class CanvasObject {
 
         this.viewMatrix = new glMatrix.mat4.create();
         this.projectionMatrix = new glMatrix.mat4.create();
-
-        console.log(this.colors);
     }
 
     drawSelf(gl, program, camera) {
@@ -197,7 +230,12 @@ class CanvasObject {
         this.glsl_translationProps.upload(gl, this.translationProps);
         this.glsl_rotationProps.upload(gl, this.rotationProps);
 
-        gl.drawElements(gl.TRIANGLES, this.getIndicesLength(), gl.UNSIGNED_SHORT, 0);
+
+        if (this.meta.isVBO) {
+            gl.drawElements(gl.TRIANGLES, this.getIndicesLength(), gl.UNSIGNED_SHORT, 0);
+        } else {
+            gl.drawArrays(gl.TRIANGLES, 0, this.getVerticesLength() / 3);
+        }
     }
 }
 
