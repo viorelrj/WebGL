@@ -188,6 +188,7 @@ class CanvasObject {
         this.glsl_projectionMatrix = new GLSLVarMat4(gl, program, 'projectionMatrix');
         this.glsl_viewMatrix = new GLSLVarMat4(gl, program, 'viewMatrix');
 
+        this.glsl_lightPosition = new GLSLVarVec3(gl, program, 'lightPosition');
         this.glsl_scaleProps = new GLSLVarVec3(gl, program, 'scaleProps');
         this.glsl_translationProps = new GLSLVarVec3(gl, program, 'translationProps');
         this.glsl_rotationProps = new GLSLVarVec3(gl, program, 'rotationProps');
@@ -217,7 +218,6 @@ class CanvasObject {
 
         this.viewMatrix = camera.getWarpedView(this.viewMatrix);
         this.projectionMatrix = camera.getWarpedProjection(this.projectionMatrix);
-
 
         this.glsl_viewMatrix.upload(gl, this.viewMatrix);
         this.glsl_projectionMatrix.upload(gl, this.projectionMatrix);
@@ -249,6 +249,7 @@ class CanvasObject {
         this.viewMatrix = camera.getWarpedView(this.viewMatrix);
         this.projectionMatrix = camera.getWarpedProjection(this.projectionMatrix);
 
+        this.glsl_lightPosition.upload(gl, [4, 4, -4]);
         this.glsl_viewMatrix.upload(gl, this.viewMatrix);
         this.glsl_projectionMatrix.upload(gl, this.projectionMatrix);
         this.glsl_scaleProps.upload(gl, this.scaleProps);

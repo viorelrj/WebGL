@@ -120,7 +120,7 @@ window.onload = function init() {
     }
 
     function render() {
-        gl.clearColor(0.9, 0.9, 0.9, 1);
+        gl.clearColor(0.05, 0.05, 0.05, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         scene.drawAll(gl, program);

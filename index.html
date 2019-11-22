@@ -3,19 +3,22 @@
 <link rel="stylesheet" href="main.css">
 <script id="vertex-shader" type="x-shader/x-vertex">
 attribute vec3 coordinates;
-
 attribute vec3 normals;
 attribute vec3 color;
-
-varying vec3 vColor;
-varying vec3 vNormal;
+uniform vec3 lightPosition;
 
 uniform vec3 scaleProps;
 uniform vec3 translationProps;
 uniform vec3 rotationProps;
 
+
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
+
+varying vec3 vColor;
+varying vec3 vNormal;
+varying vec3 vSurfaceToLight;
+
 
 void main(void) {
     mat4 VP = projectionMatrix * viewMatrix;
@@ -60,12 +63,14 @@ void main(void) {
     );
 
     mat4 rotationMatrix = rz * ry * rx;
-
     mat4 worldMatrix = translateMatrix * rotationMatrix * scaleMatrix;
+
+    vec3 surfacePosition = vec3(worldMatrix) * coordinates;
 
     gl_Position = VP * worldMatrix * vec4(coordinates, 1.0);
     vColor = color;
     vNormal = (worldMatrix * vec4(normals, 0.0)).xyz;
+    vSurfaceToLight = lightPosition - surfacePosition;
 }
 </script>
 
@@ -74,16 +79,17 @@ precision mediump float;
 
 varying vec3 vColor;
 varying vec3 vNormal;
-
+varying vec3 vSurfaceToLight;
 
 void main(void) {
-    vec3 ambientLightIntensity = vec3(0.2, 0.2, 0.2);
-    vec3 sunlightIntensity = vec3(1, 1, 1);
-    vec3 sunlightDirection = normalize(vec3(3.0, 4.0, -10.0));
+    vec3 ambientLightIntensity = vec3(0.3, 0.3, 0.3);
+    vec3 sunlightIntensity = vec3(.8, .8, .8);
+    vec3 sunlightDirection = normalize(vSurfaceToLight);
 
     vec3 lightIntensity = ambientLightIntensity + sunlightIntensity * max( dot(vNormal, sunlightDirection), 0.0 );
 
-    gl_FragColor = vec4(lightIntensity * vColor, 1.0);
+    gl_FragColor = vec4(vColor, 1.0);
+    gl_FragColor *= vec4(lightIntensity, 1.0);
 }
 </script>
 
