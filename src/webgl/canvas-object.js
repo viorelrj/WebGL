@@ -204,7 +204,10 @@ class CanvasObject {
 
     drawSelf(gl, program, camera) {
         this.uploadSelfToBuffer(gl);
-        this.indicesBuffer.activate(gl);
+
+        if (this.meta.isVBO) {
+            this.indicesBuffer.activate(gl);
+        }
 
         this.verticesBuffer.activate(gl);
         const coord = gl.getAttribLocation(program, 'coordinates');

@@ -3,10 +3,8 @@
 <link rel="stylesheet" href="main.css">
 <script id="vertex-shader" type="x-shader/x-vertex">
 attribute vec3 coordinates;
-
 attribute vec3 normals;
 attribute vec3 color;
-varying vec3 vColor;
 
 uniform vec3 scaleProps;
 uniform vec3 translationProps;
@@ -14,6 +12,8 @@ uniform vec3 rotationProps;
 
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
+
+varying vec3 vColor;
 
 void main(void) {
     mat4 VP = projectionMatrix * viewMatrix;
