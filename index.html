@@ -17,14 +17,14 @@ uniform vec3 material_ambient;
 uniform vec3 material_diffuse;
 uniform vec3 material_specular;
 
-uniform vec3 lightPosition;
-uniform vec3 lightColor;
+uniform vec3 lightPosition[16];
+uniform vec3 lightColor[16];
 
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
 
 varying vec3 vColor;
-varying vec3 vSurfaceToLight;
+varying vec3 vSurfaceToLight[16];
 varying vec3 vNormal;
 
 void main(void) {
@@ -74,11 +74,14 @@ void main(void) {
 
     vec3 surfacePosition = (worldMatrix * vec4(coordinates, 1.0)).xyz;
 
+    for (int i = 0; i < 16; i++) {
+        vSurfaceToLight[i] = lightPosition[i] - surfacePosition;
+    }
+
+    vColor = color;
+    vNormal = mat3(worldMatrix) * normals;
 
     gl_Position = VP * worldMatrix * vec4(coordinates, 1.0);
-    vColor = color;
-    vSurfaceToLight = lightPosition - surfacePosition;
-    vNormal = mat3(worldMatrix) * normals;
 }
 </script>
 
@@ -87,43 +90,51 @@ precision mediump float;
 
 varying vec3 vColor;
 varying vec3 vNormal;
-varying vec3 vSurfaceToLight;
+varying vec3 vSurfaceToLight[16];
 
 uniform float material_shininess;
 uniform vec3 material_ambient;
 uniform vec3 material_diffuse;
 uniform vec3 material_specular;
 
-uniform vec3 lightColor;
+uniform vec3 lightPosition[16];
+uniform vec3 lightColor[16];
 
 void main(void) {
-    float distance = length(vSurfaceToLight);
+    float distance;
+    vec3 surfaceToLight;
 
-    // Ambient
-    vec3 ambientLight = material_ambient * vec3(.2, .2, .2);
+    float pointLightCoefficient;
+    vec3 pointLight;
+    float specularCoefficient;
+    vec3 specularLight;
+    vec3 light;
 
-    // Diffuse
+    vec3 ambientLight = material_ambient * vec3(.001, .001, .001);
     vec3 normal = normalize(vNormal);
-    vec3 surfaceToLight = normalize(vSurfaceToLight);
-    float pointLightCoefficient = max(dot(normal, surfaceToLight), 0.0);
-    vec3 pointLight = material_diffuse * lightColor * pointLightCoefficient;
 
-    // Specular
-    float specularCoefficient =  pow(dot(normal, surfaceToLight), material_shininess);
-    vec3 specular = material_specular * lightColor * specularCoefficient;
+    gl_FragColor = vec4(ambientLight * vColor, 1);
+    light = ambientLight;
 
-    // Resulting light
-    vec3 light = vec3(0, 0, 0);
-    light += ambientLight;
-    light += pointLight;
-    light += specular;
-    
-    if (distance != 0.0) {
-        light /= distance * 0.2;
+    for( int i = 0; i < 2; i++) {
+        light = vec3(0);
+        distance = length(vSurfaceToLight[i]);
+        surfaceToLight = normalize(vSurfaceToLight[i]);
+        pointLightCoefficient = max(dot(normal, surfaceToLight), 0.0);
+        pointLight = material_diffuse * lightColor[i] * pointLightCoefficient;
+
+        specularCoefficient =  pow(dot(normal, surfaceToLight), material_shininess);
+        specularLight = material_specular * lightColor[i] * specularCoefficient;
+
+        light += pointLight;
+        light += specularLight;
+
+        if (distance != 0.0) {
+            light /= distance;
+        }
+
+        gl_FragColor += vec4(light, 1.0);
     }
-
-    gl_FragColor = vec4(light, 1.0) * vec4(vColor, 1.0);
-
 }
 </script>
 

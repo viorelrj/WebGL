@@ -18,10 +18,10 @@ class CanvasObject {
         this.translationProps = [0, 0, 0];
         this.rotationProps = [0, 0, 0];
 
-        this.shininess = 200;
+        this.shininess = .1;
         this.ambient = [1, 1, 1];
         this.diffuse = [1, 1, 1];
-        this.specular = [.1, .1, .1];
+        this.specular = [1, 1, 1];
 
         this.viewMatrix = null;
         this.projectionMatrix = null;

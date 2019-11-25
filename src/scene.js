@@ -31,8 +31,10 @@ class Scene {
         this.selectedIndex = 0;
         this.camera = new Camera([0, 0, 15], [0, 0, 0], [0, 1, 0], canvas.width, canvas.height);;
 
-        this.light = new Light([2, 2, 2], [1.0, 1.0, 1.0]);
+        this.light = new Light();
         this.light.initSelf(gl, program);
+        this.light.add([2, 2, 2], [0, 0, .2]);
+        this.light.add([-4, 2, 2], [.3, 0, 0]);
     }
 
     addObject(gl, program, type) {
@@ -167,6 +169,8 @@ class Scene {
         this.light.uploadSelf(gl);
 
         for (let sceneObject of this.objectList) {
+            sceneObject.self.rotateBy([.1, .3, .2]);
+            // sceneObject.self.translateBy([0, 0, -0.1]);
             sceneObject.self.drawSelf(gl, program, this.camera);
         }
     }

@@ -116,7 +116,6 @@ function createSphere(precision = 3, radius = 1) {
     }
 
     let colors = [];
-    let length = vertices.length
     for (let i = 0; i < vertices.length; i++) {
         colors.push(
             ...[0.231372549, 0.403921569, 0.749019608]
