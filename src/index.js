@@ -82,28 +82,19 @@ window.onload = function init() {
     });
 
 
-    const lightDiffuse = createPicker('#light-diffuse');
+    const lightColor = createPicker('#light-color');
     const lightAmbient = createPicker('#light-ambient');
-    const lightSpecular = createPicker('#light-specular');
-
-
-    lightDiffuse.on('save', function(instance) {
-        scene.dispatchObject(
-            'diffuseSet',
-            glslrgba(instance.toRGBA())
-        );
-    });
 
     lightAmbient.on('save', function(instance) {
-        scene.dispatchObject(
+        scene.dispatchLight(
             'ambientSet',
             glslrgba(instance.toRGBA())
         );
     });
 
-    lightSpecular.on('save', function(instance) {
-        scene.dispatchObject(
-            'specularSet',
+    lightColor.on('save', function(instance) {
+        scene.dispatchLight(
+            'colorSet',
             glslrgba(instance.toRGBA())
         );
     });

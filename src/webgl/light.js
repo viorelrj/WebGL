@@ -8,7 +8,7 @@ const props = {
 class Light {
     constructor () {
         this.instances = [];
-        this.ambient = [.003, .003, .003];
+        this.ambient = [.1, .1, .1];
         this.selectedIndex = 0;
 
         this.glsl_position = null;
@@ -16,7 +16,7 @@ class Light {
         this.glsl_ambient = null;
     }
 
-    add(position = [2, 2, 2], color = [.3, .0, .1]) {
+    add(position = [4, 4, 4], color = [.3, .0, .1]) {
         if (this.instances.length < 16) {
             this.instances.push({
                 'position': position,
@@ -55,11 +55,12 @@ class Light {
         } else {
             this.glsl_position.upload(gl, [0, 0, 0]);
             this.glsl_color.upload(gl, [0, 0, 0]);
-            this.glsl_ambient.upload(gl, [0, 0, 0]);
+            this.glsl_ambient.upload(gl, this.ambient);
         }
     }
 
     _setProp(property, vec) {
+        console.log(this.instances)
         this.instances[this.selectedIndex][property] = vec;
     }
 
@@ -93,25 +94,17 @@ class Light {
             this.ambientSet(payload);
         }
 
-        if (action === 'diffuseSet') {
-            this.diffuseSet(payload);
-        }
-
-        if (action === 'specularSet') {
-            this.specularSet(payload);
+        if (action === 'colorSet') {
+            this.colorSet(payload);
         }
     }
 
     ambientSet(val) {
-        this._setProp('ambient', val);
+        this.ambient = val;
     }
 
-    diffuseSet(val) {
-        this._setProp('diffuse', val);
-    }
-
-    specularSet(val) {
-        this._setProp('shininess', val);
+    colorSet(val) {
+        this._setProp('color', val);
     }
 }
 

@@ -19,7 +19,7 @@ class CanvasObject {
         this.rotationProps = [0, 0, 0];
 
         this.shininess = .1;
-        this.ambient = [1, 1, 1];
+        this.ambient = [0, 1, 1];
         this.diffuse = [1, 1, 1];
         this.specular = [1, 1, 1];
 
