@@ -1,5 +1,5 @@
 import {ArrayBuffer, IndexBuffer} from './buffer';
-import {GLSLVarMat4, GLSLVarVec3} from './primitives';
+import {GLSLVarMat4, GLSLVarVec3, GLSLVarF1} from './primitives';
 
 
 class CanvasObject {
@@ -18,10 +18,10 @@ class CanvasObject {
         this.translationProps = [0, 0, 0];
         this.rotationProps = [0, 0, 0];
 
-        this.shininess = 1;
-        this.ambient = 1;
-        this.diffuse = 1;
-        this.specular = 1;
+        this.shininess = 200;
+        this.ambient = [1, 1, 1];
+        this.diffuse = [1, 1, 1];
+        this.specular = [.1, .1, .1];
 
         this.viewMatrix = null;
         this.projectionMatrix = null;
@@ -207,17 +207,29 @@ class CanvasObject {
         this.glsl_translationProps = new GLSLVarVec3(gl, program, 'translationProps');
         this.glsl_rotationProps = new GLSLVarVec3(gl, program, 'rotationProps');
 
+        this.glsl_shininess = new GLSLVarF1(gl, program, 'material_shininess');
+        this.glsl_ambient = new GLSLVarVec3(gl, program, 'material_ambient');
+        this.glsl_diffuse = new GLSLVarVec3(gl, program, 'material_diffuse');
+        this.glsl_specular = new GLSLVarVec3(gl, program, 'material_specular');
+
         this.viewMatrix = new glMatrix.mat4.create();
         this.projectionMatrix = new glMatrix.mat4.create();
     }
 
-    drawSelf(gl, program, camera) {
-        this.uploadSelfToBuffer(gl);
+    uploadUniforms(gl) {
+        this.glsl_viewMatrix.upload(gl, this.viewMatrix);
+        this.glsl_projectionMatrix.upload(gl, this.projectionMatrix);
+        this.glsl_scaleProps.upload(gl, this.scaleProps);
+        this.glsl_translationProps.upload(gl, this.translationProps);
+        this.glsl_rotationProps.upload(gl, this.rotationProps);
+        
+        this.glsl_shininess.upload(gl, this.shininess);
+        this.glsl_ambient.upload(gl, this.ambient);
+        this.glsl_diffuse.upload(gl, this.diffuse);
+        this.glsl_specular.upload(gl, this.specular);
+    }
 
-        if (this.meta.isVBO) {
-            this.indicesBuffer.activate(gl);
-        }
-
+    uploadAttributes(gl, program) {
         this.verticesBuffer.activate(gl);
         const coord = gl.getAttribLocation(program, 'coordinates');
         gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
@@ -232,16 +244,20 @@ class CanvasObject {
         const normals = gl.getAttribLocation(program, 'normals');
         gl.vertexAttribPointer(normals, 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(normals);
+    }
+
+    drawSelf(gl, program, camera) {
+        this.uploadSelfToBuffer(gl);
+
+        if (this.meta.isVBO) {
+            this.indicesBuffer.activate(gl);
+        }
+
+        this.uploadAttributes(gl, program);
 
         this.viewMatrix = camera.getWarpedView(this.viewMatrix);
         this.projectionMatrix = camera.getWarpedProjection(this.projectionMatrix);
-
-        this.glsl_viewMatrix.upload(gl, this.viewMatrix);
-        this.glsl_projectionMatrix.upload(gl, this.projectionMatrix);
-        this.glsl_scaleProps.upload(gl, this.scaleProps);
-        this.glsl_translationProps.upload(gl, this.translationProps);
-        this.glsl_rotationProps.upload(gl, this.rotationProps);
-
+        this.uploadUniforms(gl);
 
         if (this.meta.isVBO) {
             gl.drawElements(gl.TRIANGLES, this.getIndicesLength(), gl.UNSIGNED_SHORT, 0);

@@ -31,7 +31,7 @@ class Scene {
         this.selectedIndex = 0;
         this.camera = new Camera([0, 0, 15], [0, 0, 0], [0, 1, 0], canvas.width, canvas.height);;
 
-        this.light = new Light([5, 5, 5], [1.0, 1.0, 1.0]);
+        this.light = new Light([2, 2, 2], [1.0, 1.0, 1.0]);
         this.light.initSelf(gl, program);
     }
 
