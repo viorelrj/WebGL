@@ -18,15 +18,23 @@ class CanvasObject {
         this.translationProps = [0, 0, 0];
         this.rotationProps = [0, 0, 0];
 
+        this.shininess = 1;
+        this.ambient = 1;
+        this.diffuse = 1;
+        this.specular = 1;
+
         this.viewMatrix = null;
         this.projectionMatrix = null;
-
 
         this.glsl_viewMatrix = null;
         this.glsl_projectionMatrix = null;
         this.glsl_scaleProps = null;
         this.glsl_translationProps = null;
         this.glsl_rotationProps = null;
+        this.glsl_shininess = null;
+        this.glsl_ambient = null;
+        this.glsl_diffuse = null;
+        this.glsl_specular = null;
     }
 
     setVertices(vertices, indices, colors, normals) {
@@ -58,9 +66,6 @@ class CanvasObject {
             this.vertices = _vertices;
             this.colors = _colors;
             this.normals = this.getStandartNormals();
-
-            console.log(this.normals.length);
-            console.log(this.vertices.length);
         }
     }
 
@@ -85,7 +90,6 @@ class CanvasObject {
         }
 
         for (let triangle of triangles) {
-            console.log(triangle, calculateNormal(triangle[0], triangle[1], triangle[2]));
             normals.push(...calculateNormal(triangle[0], triangle[1], triangle[2]));
             normals.push(...calculateNormal(triangle[0], triangle[1], triangle[2]));
             normals.push(...calculateNormal(triangle[0], triangle[1], triangle[2]));

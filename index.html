@@ -6,6 +6,7 @@ attribute vec3 coordinates;
 attribute vec3 normals;
 attribute vec3 color;
 uniform vec3 lightPosition;
+uniform vec3 lightColor;
 
 uniform vec3 scaleProps;
 uniform vec3 translationProps;
@@ -17,6 +18,7 @@ uniform mat4 projectionMatrix;
 varying vec3 vColor;
 varying vec3 vSurfaceToLight;
 varying vec3 vNormal;
+varying vec3 vPointLightColor;
 
 void main(void) {
     mat4 VP = projectionMatrix * viewMatrix;
@@ -61,15 +63,16 @@ void main(void) {
     );
 
     mat4 rotationMatrix = rz * ry * rx;
-    mat4 worldMatrix = VP * translateMatrix * rotationMatrix * scaleMatrix;
+    mat4 worldMatrix = translateMatrix * rotationMatrix * scaleMatrix;
 
     vec3 surfacePosition = (worldMatrix * vec4(coordinates, 1.0)).xyz;
 
 
-    gl_Position = worldMatrix * vec4(coordinates, 1.0);
+    gl_Position = VP * worldMatrix * vec4(coordinates, 1.0);
     vColor = color;
     vSurfaceToLight = lightPosition - surfacePosition;
-    vNormal = normals;
+    vNormal = mat3(worldMatrix) * normals;
+    vPointLightColor = lightColor;
 }
 </script>
 
@@ -79,9 +82,32 @@ precision mediump float;
 varying vec3 vColor;
 varying vec3 vNormal;
 varying vec3 vSurfaceToLight;
+varying vec3 vPointLightColor;
+
+varying vec3 test;
 
 void main(void) {
-    gl_FragColor = vec4(vNormal, 1.0);
+
+    // Ambient
+    vec3 ambientLight = vec3(.2, .2, .2);
+
+    // Diffuse
+    vec3 normal = normalize(vNormal);
+    vec3 surfaceToLight = normalize(vSurfaceToLight);
+    float pointLightCoefficient = max(dot(normal, surfaceToLight), 0.0);
+    vec3 pointLight = vPointLightColor * pointLightCoefficient;
+
+    // Specular
+    float specularCoefficient =  pow(dot(normal, surfaceToLight), 20.0);
+    vec3 specular = vPointLightColor * specularCoefficient;
+
+    // Resulting light
+    vec3 light = vec3(0, 0, 0);
+    light += ambientLight;
+    light += pointLight;
+    light += specular;
+
+    gl_FragColor = vec4(light, 1.0) * vec4(vColor, 1.0);
 }
 </script>
 

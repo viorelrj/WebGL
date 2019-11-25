@@ -41,16 +41,15 @@ const cubeProps = {
     ],
 
     colors: [
-        ...[0, 0, 0],
-        ...[0, 0, 1],
-        ...[0, 1, 0],
-        ...[0, 1, 1],
+        ...[0.231372549, 0.403921569, 0.749019608],
+        ...[0.231372549, 0.403921569, 0.749019608],
+        ...[0.231372549, 0.403921569, 0.749019608],
+        ...[0.231372549, 0.403921569, 0.749019608],
 
-        ...[1, 0, 0],
-        ...[1, 0, 1],
-        ...[1, 1, 0],
-        ...[1, 1, 1],
-
+        ...[0.231372549, 0.403921569, 0.749019608],
+        ...[0.231372549, 0.403921569, 0.749019608],
+        ...[0.231372549, 0.403921569, 0.749019608],
+        ...[0.231372549, 0.403921569, 0.749019608]
     ]
 }
 
@@ -120,11 +119,7 @@ function createSphere(precision = 3, radius = 1) {
     let length = vertices.length
     for (let i = 0; i < vertices.length; i++) {
         colors.push(
-            ...[
-                Math.random() * 10 * i / length,
-                Math.random() * 10 * i / length,
-                Math.random() * 10 * i / length
-            ]
+            ...[0.231372549, 0.403921569, 0.749019608]
         )
     }
 
@@ -158,6 +153,6 @@ function createSphere(precision = 3, radius = 1) {
 
 }
 
-const sphereProps = createSphere(20, 1);
+const sphereProps = createSphere(60, 1);
 
 export {cubeProps, pyramidProps, sphereProps};

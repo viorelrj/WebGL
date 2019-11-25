@@ -1,5 +1,6 @@
 import { cubeProps, pyramidProps, sphereProps } from './consts.js';
 import { CanvasObject } from './webgl/canvas-object';
+import { Light } from './webgl/light';
 import { Camera } from './webgl/camera';
 
 const objectMap = {
@@ -29,6 +30,9 @@ class Scene {
         this.objectList = [];
         this.selectedIndex = 0;
         this.camera = new Camera([0, 0, 15], [0, 0, 0], [0, 1, 0], canvas.width, canvas.height);;
+
+        this.light = new Light([5, 5, 5], [1.0, 1.0, 1.0]);
+        this.light.initSelf(gl, program);
     }
 
     addObject(gl, program, type) {
@@ -160,6 +164,8 @@ class Scene {
     }
 
     drawAll(gl, program) {
+        this.light.uploadSelf(gl);
+
         for (let sceneObject of this.objectList) {
             sceneObject.self.drawSelf(gl, program, this.camera);
         }
