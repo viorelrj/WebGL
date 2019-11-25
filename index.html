@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
-<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/colorpicker.css">
 <script id="vertex-shader" type="x-shader/x-vertex">
 precision mediump float;
 
@@ -19,6 +20,7 @@ uniform vec3 material_specular;
 
 uniform vec3 lightPosition[16];
 uniform vec3 lightColor[16];
+uniform vec3 ambientLight;
 
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
@@ -99,6 +101,7 @@ uniform vec3 material_specular;
 
 uniform vec3 lightPosition[16];
 uniform vec3 lightColor[16];
+uniform vec3 ambientLight;
 
 void main(void) {
     float distance;
@@ -110,13 +113,12 @@ void main(void) {
     vec3 specularLight;
     vec3 light;
 
-    vec3 ambientLight = material_ambient * vec3(.001, .001, .001);
+    vec3 ambientLight = material_ambient * ambientLight;
     vec3 normal = normalize(vNormal);
 
     gl_FragColor = vec4(ambientLight * vColor, 1);
-    light = ambientLight;
 
-    for( int i = 0; i < 2; i++) {
+    for( int i = 0; i < 16; i++) {
         light = vec3(0);
         distance = length(vSurfaceToLight[i]);
         surfaceToLight = normalize(vSurfaceToLight[i]);
@@ -130,7 +132,7 @@ void main(void) {
         light += specularLight;
 
         if (distance != 0.0) {
-            light /= distance;
+            light /= distance * .4;
         }
 
         gl_FragColor += vec4(light, 1.0);
@@ -153,76 +155,159 @@ void main(void) {
             <label for="object-type">I would like to add a: </label>
             <select name="object" id="object-type">
                 <option value="cube">Cube</option>
-                <option value="sphere">Sphere</option>
+                <option value="cone">Cone</option>
                 <option value="pyramid">Pyramid</option>
             </select>
             <button id="add-object">Do it!</button>
         </div>
         <hr>
+        <!-- object -->
         <div class="controls__modifications">
-            <label for="object-index"> Make </label>
-            <select name="object-index" id="object-index">
-            </select>
-            <button class="js-dispatch-object-button" data-method="remove">Gone!</button>
-
             <div class="control__row">
-                <div class="control__item control__translate">
-                    <p>Translate:</p>
-                    <div>
-                        <span>By axis X:</span>
-                        <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="0" data-direction="-1">-</button>
-                        <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="0" data-direction="1">+</button>
-                    </div>
-                    <div>
-                        <span>By axis Y:</span>
-                        <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="1" data-direction="-1">-</button>
-                        <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="1" data-direction="1">+</button>
-                    </div>
-                    <div>
-                        <span>By axis Z:</span>
-                        <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="2" data-direction="-1">-</button>
-                        <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="2" data-direction="1">+</button>
-                    </div>
+                <div class="control__item">
+                    <label for="object-index"> Make </label>
+                    <select name="object-index" id="object-index">
+                    </select>
+                    <button class="js-dispatch-object-button" data-method="remove">Gone!</button>
                 </div>
-                <div class="control__item control__rotate">
-                    <p>Rotate:</p>
-                    <div>
-                        <span>By axis X:</span>
-                        <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="0" data-direction="-1">-</button>
-                        <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="0" data-direction="1">+</button>
+                <div class="control__row">
+                    <div class="control__item control__translate">
+                        <p>Translate:</p>
+                        <div>
+                            <span>By axis X:</span>
+                            <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="0" data-direction="-1">-</button>
+                            <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="0" data-direction="1">+</button>
+                        </div>
+                        <div>
+                            <span>By axis Y:</span>
+                            <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="1" data-direction="-1">-</button>
+                            <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="1" data-direction="1">+</button>
+                        </div>
+                        <div>
+                            <span>By axis Z:</span>
+                            <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="2" data-direction="-1">-</button>
+                            <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="2" data-direction="1">+</button>
+                        </div>
                     </div>
-                    <div>
-                        <span>By axis Y:</span>
-                        <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="1" data-direction="-1">-</button>
-                        <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="1" data-direction="1">+</button>
+                    <div class="control__item control__rotate">
+                        <p>Rotate:</p>
+                        <div>
+                            <span>By axis X:</span>
+                            <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="0" data-direction="-1">-</button>
+                            <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="0" data-direction="1">+</button>
+                        </div>
+                        <div>
+                            <span>By axis Y:</span>
+                            <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="1" data-direction="-1">-</button>
+                            <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="1" data-direction="1">+</button>
+                        </div>
+                        <div>
+                            <span>By axis Z:</span>
+                            <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="2" data-direction="-1">-</button>
+                            <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="2" data-direction="1">+</button>
+                        </div>
                     </div>
-                    <div>
-                        <span>By axis Z:</span>
-                        <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="2" data-direction="-1">-</button>
-                        <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="2" data-direction="1">+</button>
+                    <div class="control__item control__scale">
+                        <p>Scale:</p>
+                        <div>
+                            <span>By axis X:</span>
+                            <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="0" data-direction="-1">-</button>
+                            <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="0" data-direction="1">+</button>
+                        </div>
+                        <div>
+                            <span>By axis Y:</span>
+                            <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="1" data-direction="-1">-</button>
+                            <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="1" data-direction="1">+</button>
+                        </div>
+                        <div>
+                            <span>By axis Z:</span>
+                            <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="2" data-direction="-1">-</button>
+                            <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="2" data-direction="1">+</button>
+                        </div>
                     </div>
-                </div>
-                <div class="control__item control__scale">
-                    <p>Scale:</p>
-                    <div>
-                        <span>By axis X:</span>
-                        <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="0" data-direction="-1">-</button>
-                        <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="0" data-direction="1">+</button>
-                    </div>
-                    <div>
-                        <span>By axis Y:</span>
-                        <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="1" data-direction="-1">-</button>
-                        <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="1" data-direction="1">+</button>
-                    </div>
-                    <div>
-                        <span>By axis Z:</span>
-                        <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="2" data-direction="-1">-</button>
-                        <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="2" data-direction="1">+</button>
+                    <div class="control__item">
+                        <label for="material-ambient">Material ambient</label>
+                        <div data-item="test" id="material-ambient">
+                        </div>
+                        <br>
+    
+                        <label for="material-diffuse">Material diffuse</label>
+                        <div data-item="test" id="material-diffuse">
+                        </div>
+                        <br>
+    
+                        <label for="material-specular">Material specular</label>
+                        <div data-item="test" id="material-specular">
+                        </div>
+    
+                        <label for="material-shininess">Material shininess</label>
+                        <input data-item="test" type="number" id="material-shininess">
+                        </input>
                     </div>
                 </div>
             </div>
         </div>
         </div>
+        <!-- end object -->
+        <hr>
+        <!-- light -->
+        <div class="controls__modifications">
+            <div class="control__row">
+                <div class="control__item">
+                    <div class="controls__add">
+                        <button id="add-light">Add light</button>
+                    </div>
+                </div>
+                <div class="control__item">
+                    <label for="light-index"> Make </label>
+                    <select name="light-index" id="light-index">
+                    </select>
+                    <button class="js-dispatch-light-button" data-method="remove">Gone!</button>
+                </div>
+                <div class="control__row">
+                    <div class="control__item control__translate">
+                        <p>Translate:</p>
+                        <div>
+                            <span>By axis X:</span>
+                            <button class="js-dispatch-light-button" data-method="translateBy" data-axis-index="0"
+                                data-direction="-1">-</button>
+                            <button class="js-dispatch-light-button" data-method="translateBy" data-axis-index="0"
+                                data-direction="1">+</button>
+                        </div>
+                        <div>
+                            <span>By axis Y:</span>
+                            <button class="js-dispatch-light-button" data-method="translateBy" data-axis-index="1"
+                                data-direction="-1">-</button>
+                            <button class="js-dispatch-light-button" data-method="translateBy" data-axis-index="1"
+                                data-direction="1">+</button>
+                        </div>
+                        <div>
+                            <span>By axis Z:</span>
+                            <button class="js-dispatch-light-button" data-method="translateBy" data-axis-index="2"
+                                data-direction="-1">-</button>
+                            <button class="js-dispatch-light-button" data-method="translateBy" data-axis-index="2"
+                                data-direction="1">+</button>
+                        </div>
+                    </div>
+                    <div class="control__item">
+                        <label for="light-ambient">Light ambient</label>
+                        <div id="light-ambient">
+                        </div>
+                        <br>
+        
+                        <label for="light-diffuse">Light diffuse</label>
+                        <div id="light-diffuse">
+                        </div>
+                        <br>
+        
+                        <label for="light-specular">Light specular</label>
+                        <div id="light-specular">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end light -->
         <hr>
         <div class="controls__camera">
             <p>Make camera: </p>

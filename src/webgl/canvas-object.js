@@ -197,6 +197,22 @@ class CanvasObject {
         this._setProp('rotationProps', rotator);
     }
 
+    specularSet(val) {
+        this._setProp('specular', val);
+    }
+
+    ambientSet(val) {
+        this._setProp('ambient', val);
+    }
+
+    diffuseSet(val) {
+        this._setProp('diffuse', val);
+    }
+
+    shininessSet(val) {
+        this._setProp('shininess', val);
+    }
+
     initSelf(gl, program) {
         this.initBuffer(gl);
 

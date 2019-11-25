@@ -1,4 +1,6 @@
 import { Scene } from './scene';
+import Pickr from '@simonwep/pickr';
+
 
 function initContext() {
     const canvas = document.getElementById("gl-canvas");
@@ -10,6 +12,7 @@ function initContext() {
     gl.clearColor(.1, .1, .1, 1);
 
     gl.enable(gl.DEPTH_TEST);
+    gl.cullFace(gl.BACK);
 
     const program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
@@ -28,10 +31,105 @@ window.onload = function init() {
     const inputs_dispatchCamera = document.getElementsByClassName('js-dispatch-camera-input');
     const select_objectIndex = document.getElementById('object-index');
     const select_objectType = document.getElementById('object-type');
+    const materialShininess = this.document.getElementById('material-shininess');
+    const btn_addLight = document.getElementById('add-light');
+    const btns_dispatchLight = document.getElementsByClassName('js-dispatch-light-button');
+
+
+    function createPicker(id) {
+        return Pickr.create({
+            el: id,
+            theme: 'classic',
+            components: {
+                // Main components
+                preview: true,
+                opacity: true,
+                hue: true,
+                // Input / output Options
+                interaction: {
+                    save: true
+                }
+            }
+        });
+    }
+
+    const glslrgba = arr => arr.map( item => item / 255).filter( (item, index) => index != 3 );
+
+    const materialDiffuse = createPicker('#material-diffuse');
+    const materialAmbient = createPicker('#material-ambient');
+    const materialSpecular = createPicker('#material-specular');
+
+
+    materialDiffuse.on('save', function(instance) {
+        scene.dispatchObject(
+            'diffuseSet',
+            glslrgba(instance.toRGBA())
+        );
+    });
+
+    materialAmbient.on('save', function(instance) {
+        scene.dispatchObject(
+            'ambientSet',
+            glslrgba(instance.toRGBA())
+        );
+    });
+
+    materialSpecular.on('save', function(instance) {
+        scene.dispatchObject(
+            'specularSet',
+            glslrgba(instance.toRGBA())
+        );
+    });
+
+
+    const lightDiffuse = createPicker('#light-diffuse');
+    const lightAmbient = createPicker('#light-ambient');
+    const lightSpecular = createPicker('#light-specular');
+
+
+    lightDiffuse.on('save', function(instance) {
+        scene.dispatchObject(
+            'diffuseSet',
+            glslrgba(instance.toRGBA())
+        );
+    });
+
+    lightAmbient.on('save', function(instance) {
+        scene.dispatchObject(
+            'ambientSet',
+            glslrgba(instance.toRGBA())
+        );
+    });
+
+    lightSpecular.on('save', function(instance) {
+        scene.dispatchObject(
+            'specularSet',
+            glslrgba(instance.toRGBA())
+        );
+    });
 
     function addObjectsToPanel() {
         const items = scene.getNameList();
         const select = document.getElementById('object-index');
+
+        while (select.firstChild) {
+            select.removeChild(select.firstChild);
+        }
+
+        for (let i = 0; i < items.length; i++) {
+            const option = document.createElement('option');
+            const text = document.createTextNode(items[i]);
+            option.setAttribute('value', i);
+            option.appendChild(text);
+            select.appendChild(option);
+        }
+
+        select.value = scene.selectedIndex;
+    }
+
+    function addLightToPanel() {
+        const items = scene.getLightNameList();
+        const select = document.getElementById('light-index');
 
         while (select.firstChild) {
             select.removeChild(select.firstChild);
@@ -53,7 +151,7 @@ window.onload = function init() {
         const objectType = select_objectType.value;
         scene.addObject(gl, program, objectType);
 
-        addObjectsToPanel(scene);
+        addObjectsToPanel();
     });
 
     // Focus listener
@@ -61,6 +159,20 @@ window.onload = function init() {
         const index = select_objectIndex.value;
         scene.selectIndex(index);
     });
+    
+
+    btn_addLight.addEventListener('click', function() {
+        scene.addLight();
+
+        addLightToPanel();
+    })
+
+    materialShininess.addEventListener('change', function(e) {
+        scene.dispatchObject(
+            'shininessSet',
+            e.target.value
+        );
+    })
 
     // Modifications event listener
     for (let i = 0; i < btns_dispatchObject.length; i++) {
@@ -80,6 +192,26 @@ window.onload = function init() {
             );
 
             addObjectsToPanel(scene.getNameList());
+        })
+    }
+
+    for ( let i = 0; i < btns_dispatchLight.length; i++) {
+        const button = btns_dispatchLight[i];
+
+        button.addEventListener('click', function (e) {
+            const method = e.target.getAttribute('data-method');
+            const axisIndex = parseFloat(e.target.getAttribute('data-axis-index'));
+            const direction = parseFloat(e.target.getAttribute('data-direction'));
+
+            scene.dispatchLight(
+                method,
+                {
+                    axisIndex,
+                    direction
+                }
+            );
+
+            addLightToPanel();
         })
     }
 

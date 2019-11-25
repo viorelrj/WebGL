@@ -103,7 +103,7 @@ function createSphere(precision = 3, radius = 1) {
         stackAngle = Math.PI / 2 - i * stackStep;
         xy = radius * Math.cos(stackAngle);
         z = radius * Math.sin(stackAngle);
-
+        
         for (let j = 0; j <= sectorCount; ++j) {
             sectorAngle = j * sectorStep;
 
@@ -128,7 +128,7 @@ function createSphere(precision = 3, radius = 1) {
     for (let i = 0; i < stackCount; i++) {
         k1 = i * (sectorCount + 1);
         k2 = k1 + sectorCount + 1;
-
+        
         for (let j = 0; j < sectorCount; j++ , k1++ , k2++) {
             if (i != 0) {
                 indices.push(k1);
@@ -152,6 +152,43 @@ function createSphere(precision = 3, radius = 1) {
 
 }
 
-const sphereProps = createSphere(60, 1);
+function createCone(precision = 10, radius = 1) {
+    let vertices = []
+    let colors = []
+    let step = Math.PI * 2 / precision;
+    for(let i = 0; i < precision; i++) {
+        vertices.push(Math.cos(i * step))
+        vertices.push(Math.sin(i * step))
+        vertices.push(0)
+        colors.push(...[.4, .4, .4])
+    }
+    colors.push(...[.4, .4, .4])
+    colors.push(...[.4, .4, .4])
+    vertices.push(...[0, 0, 4])
+    vertices.push(...[0, 0, 0]);
 
-export {cubeProps, pyramidProps, sphereProps};
+    let indices = [];
+
+    for (let i = 0; i < precision - 1; i++) {
+        indices.push(
+            ...[i, i + 1, precision],
+            ...[i, i + 1, precision + 1]
+        )
+    }
+
+    indices.push(
+        ...[precision - 1, 0, precision],
+        ...[precision - 1, 0, precision + 1]
+    )
+
+    return {
+        vertices: vertices,
+        indices: indices,
+        colors: colors
+    }
+}
+
+// const sphereProps = createSphere(10, 1);
+const coneProps = createCone(20);
+
+export {cubeProps, pyramidProps, coneProps};

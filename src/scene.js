@@ -1,4 +1,4 @@
-import { cubeProps, pyramidProps, sphereProps } from './consts.js';
+import { cubeProps, pyramidProps, coneProps } from './consts.js';
 import { CanvasObject } from './webgl/canvas-object';
 import { Light } from './webgl/light';
 import { Camera } from './webgl/camera';
@@ -12,9 +12,9 @@ const objectMap = {
         counter: 0,
         self: pyramidProps
     },
-    'sphere': {
+    'cone': {
         counter: 0,
-        self: sphereProps
+        self: coneProps
     }
 };
 
@@ -29,12 +29,15 @@ class Scene {
     constructor (gl, canvas, program) {
         this.objectList = [];
         this.selectedIndex = 0;
+    
         this.camera = new Camera([0, 0, 15], [0, 0, 0], [0, 1, 0], canvas.width, canvas.height);;
 
         this.light = new Light();
         this.light.initSelf(gl, program);
-        this.light.add([2, 2, 2], [0, 0, .2]);
-        this.light.add([-4, 2, 2], [.3, 0, 0]);
+    }
+
+    addLight() {
+        this.light.add();
     }
 
     addObject(gl, program, type) {
@@ -54,11 +57,17 @@ class Scene {
         return this.objectList.map(obj => obj.name);
     }
 
+    getLightNameList() {
+        return this.light.instances.map(obj => obj.name)
+    }
+
     selectIndex(index) {
         this.selectedIndex = index;
     }
 
     dispatchObject(action, payload) {
+        const object = this.objectList[this.selectedIndex];
+
         if (action === 'translateBy') {
             const {axisIndex, direction} = payload;
             const object = this.objectList[this.selectedIndex];
@@ -92,6 +101,22 @@ class Scene {
         if (action === 'remove') {
             this.objectList.splice(this.selectedIndex, 1);
             this.selectedIndex = 0;
+        }
+
+        if (action === 'ambientSet') {
+            object.self.ambientSet(payload);
+        }
+
+        if (action === 'diffuseSet') {
+            object.self.diffuseSet(payload);
+        }
+
+        if (action === 'specularSet') {
+            object.self.specularSet(payload);
+        }
+
+        if (action == 'shininessSet') {
+            object.self.shininessSet(payload);
         }
     }
 
@@ -163,6 +188,10 @@ class Scene {
             this.camera.setUpZ(value);
         }
 
+    }
+
+    dispatchLight(action, payload) {
+        this.light.dispatch(action, payload);
     }
 
     drawAll(gl, program) {
