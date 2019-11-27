@@ -2,6 +2,8 @@
 <html>
 <link rel="stylesheet" href="css/main.css">
 <link rel="stylesheet" href="css/colorpicker.css">
+<link rel="stylesheet" href="css/reset.css">
+<link rel="stylesheet" href="css/controls.css">
 <script id="vertex-shader" type="x-shader/x-vertex">
 precision mediump float;
 
@@ -144,8 +146,8 @@ void main(void) {
 <script type="text/javascript" src="libs/MV.js"></script>
 <script type="text/javascript" src="dist/bundle.js"></script>
 
-<body>
-    <canvas id="gl-canvas" width="512" height=" 512">
+<body id='body'>
+    <canvas id="gl-canvas">
         Oops ... your browser doesn't support the HTML5 canvas element
     </canvas>
     <div class="controls">
@@ -159,9 +161,9 @@ void main(void) {
             </select>
             <button id="add-object">Do it!</button>
         </div>
-        <hr>
+        <!-- <hr> -->
         <!-- object -->
-        <div class="controls__modifications">
+        <!-- <div class="controls__modifications">
             <div class="control__row">
                 <div class="control__item">
                     <label for="object-index"> Make </label>
@@ -245,12 +247,11 @@ void main(void) {
                     </div>
                 </div>
             </div>
-        </div>
-        </div>
+        </div> -->
         <!-- end object -->
-        <hr>
+        <!-- <hr> -->
         <!-- light -->
-        <div class="controls__modifications">
+        <!-- <div class="controls__modifications">
             <div class="control__row">
                 <div class="control__item">
                     <div class="controls__add">
@@ -301,9 +302,9 @@ void main(void) {
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
         <!-- end light -->
-        <hr>
+        <!-- <hr>
         <div class="controls__camera">
             <p>Make camera: </p>
             <div class="control__row">
@@ -412,7 +413,7 @@ void main(void) {
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
     </div>
 </body>
 
