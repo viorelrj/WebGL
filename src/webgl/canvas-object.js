@@ -36,12 +36,6 @@ class CanvasObject {
         this.glsl_ambient = null;
         this.glsl_diffuse = null;
         this.glsl_specular = null;
-
-        const test = function () {
-            console.log('testing this thing')
-        }
-
-        mouse.addMouseMoveDelegates(test)
     }
 
     setVertices(vertices, indices, colors, normals) {

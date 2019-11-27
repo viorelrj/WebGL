@@ -8,20 +8,24 @@ class Mouse {
         this.obj = object;
     }
 
-    addMouseMoveDelegates(func) {
-        
+    initListeners(){
+        this.initMouseMove();
+    }
+
+    addMouseMoveDelegate(func) {
         this.mouseMoveDelegates.push(func);
     }
 
-    _initEventListener(event, delegates) {
+    _initEventListener(event, delegates, payload) {
         const self = this;
         self.obj.addEventListener(event, function() {
-            delegates.map(item => item())
+            delegates.map(item => item(payload))
         })
     }
 
     initMouseMove() {
-        this._initEventListener('mousemove', this.mouseMoveDelegates);
+        const payload = {x: 'x', y: 'y'}
+        this._initEventListener('mousemove', this.mouseMoveDelegates, payload);
     }
 }
 

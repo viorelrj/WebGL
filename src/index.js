@@ -30,13 +30,7 @@ window.onload = function init() {
     }
 
     mouse.bindObject(canvas);
-    mouse.initMouseMove();
-
-    const test = function () {
-        console.log('testing this thing from index')
-    }
-
-    mouse.addMouseMoveDelegates(test)
+    mouse.initListeners();
 
 
     const btn_addObject = document.getElementById('add-object');
