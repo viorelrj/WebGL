@@ -1,5 +1,6 @@
 import { Scene } from './scene';
 import { setSize } from './ui/size';
+import { mouse } from './ui/mouse';
 import Pickr from '@simonwep/pickr';
 
 function initContext() {
@@ -27,6 +28,15 @@ window.onload = function init() {
     window.onresize = function() {
         setSize(canvas, gl, scene);
     }
+
+    mouse.bindObject(canvas);
+    mouse.initMouseMove();
+
+    const test = function () {
+        console.log('testing this thing from index')
+    }
+
+    mouse.addMouseMoveDelegates(test)
 
 
     const btn_addObject = document.getElementById('add-object');
