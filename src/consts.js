@@ -132,14 +132,14 @@ function createSphere(precision = 3, radius = 1) {
         for (let j = 0; j < sectorCount; j++ , k1++ , k2++) {
             if (i != 0) {
                 indices.push(k1);
-                indices.push(k2);
                 indices.push(k1 + 1);
+                indices.push(k2);
             }
 
             if (i != (stackCount - 1)) {
                 indices.push(k1 + 1);
-                indices.push(k2);
                 indices.push(k2 + 1);
+                indices.push(k2);
             }
         }
     }
@@ -171,8 +171,8 @@ function createCone(precision = 10, radius = 1) {
 
     for (let i = 0; i < precision - 1; i++) {
         indices.push(
-            ...[i, i + 1, precision],
-            ...[i, i + 1, precision + 1]
+            ...[i + 1, i, precision],
+            ...[i + 1, i, precision + 1]
         )
     }
 
@@ -188,7 +188,8 @@ function createCone(precision = 10, radius = 1) {
     }
 }
 
-// const sphereProps = createSphere(10, 1);
+const sphereProps = createSphere(50, 1);
 const coneProps = createCone(20);
 
-export {cubeProps, pyramidProps, coneProps};
+
+export {cubeProps, pyramidProps, coneProps, sphereProps};

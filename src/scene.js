@@ -1,4 +1,4 @@
-import { cubeProps, pyramidProps, coneProps } from './consts.js';
+import { cubeProps, pyramidProps, coneProps, sphereProps } from './consts.js';
 import { CanvasObject } from './webgl/canvas-object';
 import { Light } from './webgl/light';
 import { Camera } from './webgl/camera';
@@ -15,6 +15,10 @@ const objectMap = {
     'cone': {
         counter: 0,
         self: coneProps
+    },
+    'sphere': {
+        counter: 0,
+        self: sphereProps
     }
 };
 

@@ -13,6 +13,7 @@ function initContext() {
 
     gl.enable(gl.DEPTH_TEST);
     gl.cullFace(gl.BACK);
+    gl.frontFace(gl.CCW);
 
     const program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
