@@ -18,10 +18,29 @@ const MIDDLE = 'middle';
 class Mouse {
     constructor() {
         this.obj = null;
+        this.lastClick = {
+            x: null,
+            y: null
+        }
     }
 
     bindObject(object) {
         this.obj = object;
+    }
+
+    _setLastClick(x, y) {
+        this.lastClick = {
+            x: x,
+            y: y
+        }
+    }
+
+    _getLastClickVector() {
+        return [this.lastClick.x, this.lastClick.y];
+    }
+
+    _getClientVector(e) {
+        return [e.clientX, e.clientY];
     }
 
     _preventContextMenu() {
@@ -47,6 +66,14 @@ class Mouse {
         return false;
     }
 
+    _getMouseMoveDirection(e) {
+        const lastClick = this._getLastClickVector();
+        const client = this._getClientVector(e);
+        const result = client.map((item, index) => item - lastClick[index]);
+        this._setLastClick(e.clientX, e.clientY);
+        return result;
+    }
+
     _initEventListener(event, delegates) {
         const self = this;
         self.obj.addEventListener(event, function (e) {
@@ -61,6 +88,17 @@ class Mouse {
     initListeners(){
         this._preventContextMenu();
         this.initMouseMove();
+        this.initMouseDown();
+    }
+
+    registerMouseClick(e) {
+        if(this._getMouseClick(e) == PRIMARY) {
+            this._setLastClick(e.clientX, e.clientY);
+        }
+    }
+
+    initMouseDown() {
+        this._initEventListener('mousedown', this.registerMouseClick.bind(this))
     }
 
     initMouseMove() {
@@ -69,7 +107,7 @@ class Mouse {
 
     interpretMouseMove(e) {
         if (this._getMouseClick(e) === PRIMARY) {
-            console.log('dragging primary')
+            console.log(this._getMouseMoveDirection(e));
         } else if (this._getMouseClick(e) === SECONDARY) {
             console.log('dragging secondary')
         } else if (this._getMouseClick(e) === MIDDLE) {
