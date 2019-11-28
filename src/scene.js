@@ -40,11 +40,11 @@ class Scene {
         this.light = new Light();
         this.light.initSelf(gl, program);
 
-        mouse.addMouseMoveDelegate(this.handleMouseMove.bind(this))
+        // mouse.addMouseMoveDelegate(this.handleMouseMove.bind(this))
     }
 
     handleMouseMove(payload) {
-        this.dispatchObject('rotateBy', {axisIndex: 0, direction: 1})
+        // this.dispatchObject('rotateBy', {axisIndex: 0, direction: 1})
     }
 
     addLight() {
