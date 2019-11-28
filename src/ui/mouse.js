@@ -22,6 +22,12 @@ class Mouse {
             x: null,
             y: null
         }
+
+        this.dragPrimaryDelegates = []
+    }
+
+    subscribeToDragPrimary(func) {
+        this.dragPrimaryDelegates.push(func);
     }
 
     bindObject(object) {
@@ -107,14 +113,18 @@ class Mouse {
 
     interpretMouseMove(e) {
         if (this._getMouseClick(e) === PRIMARY) {
-            console.log(this._getMouseMoveDirection(e));
+            this.handleDragPrimary(this._getMouseMoveDirection(e));
         } else if (this._getMouseClick(e) === SECONDARY) {
-            console.log('dragging secondary')
+            // console.log('dragging secondary')
         } else if (this._getMouseClick(e) === MIDDLE) {
-            console.log('dragging middle')
+            // console.log('dragging middle')
         } else if (!!!this._getMouseClick(e)) {
-            console.log('just moving')
+            // console.log('just moving')
         }
+    }
+
+    handleDragPrimary(direction) {
+        this.dragPrimaryDelegates.map((item) => item(direction))
     }
 }
 

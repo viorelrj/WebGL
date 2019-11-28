@@ -40,11 +40,11 @@ class Scene {
         this.light = new Light();
         this.light.initSelf(gl, program);
 
-        // mouse.addMouseMoveDelegate(this.handleMouseMove.bind(this))
+        mouse.subscribeToDragPrimary(this.handleMouseMove.bind(this))
     }
 
     handleMouseMove(payload) {
-        // this.dispatchObject('rotateBy', {axisIndex: 0, direction: 1})
+        this.dispatchObject('rotateBy', [payload[1], payload[0], 0])
     }
 
     addLight() {
@@ -90,11 +90,7 @@ class Scene {
         }
 
         if (action === 'rotateBy') {
-            const { axisIndex, direction } = payload;
-            const object = this.objectList[this.selectedIndex];
-
-            const actionVector = [0, 0, 0];
-            actionVector[axisIndex] += direction * 6;
+            const actionVector = payload;
 
             object.self.rotateBy(actionVector);
         }
