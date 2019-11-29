@@ -44,7 +44,7 @@ class Scene {
     }
 
     handleMouseMove(payload) {
-        this.dispatchObject('rotateBy', [payload[1], payload[0], 0])
+        // this.dispatchObject('rotateByViewPort', [payload[1], payload[0], 0])
     }
 
     addLight() {
@@ -93,6 +93,12 @@ class Scene {
             const actionVector = payload;
 
             object.self.rotateBy(actionVector);
+        }
+
+        if (action === 'rotateByViewPort') {
+            const actionVector = payload;
+
+            object.self.rotateByViewPort(actionVector);
         }
 
         if (action === 'scaleBy') {

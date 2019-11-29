@@ -17,7 +17,7 @@ class CanvasObject {
 
         this.scaleProps = [1, 1, 1]
         this.translationProps = [0, 0, 0];
-        this.rotationProps = [0, 0, 0];
+        this.rotationProps = [0, 0, 45];
 
         this.shininess = .1;
         this.ambient = [0, 1, 1];
@@ -192,6 +192,16 @@ class CanvasObject {
 
     rotateBy(rotator) {
         this._warpProp('rotationProps', rotator);
+    }
+
+    rotateByViewPort(params) {
+        // let rotator = [
+        //     params[0] - this.rotationProps[0],
+        //     params[1] - this.rotationProps[1],
+        //     -this.rotationProps[2]
+        // ]
+
+        // console.log(rotator);
     }
 
     rotateSet(rotator) {
