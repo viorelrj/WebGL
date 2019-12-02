@@ -209,9 +209,9 @@ class Scene {
 
     drawAll(gl, program) {
         this.light.uploadSelf(gl);
-
         for (let sceneObject of this.objectList) {
-            // sceneObject.self.rotateBy([.1, .3, .2]);
+            
+            sceneObject.self.rotateBy([0, 0, 1]);
             // sceneObject.self.translateBy([0, 0, -0.1]);
             sceneObject.self.drawSelf(gl, program, this.camera);
         }

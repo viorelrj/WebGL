@@ -13,7 +13,8 @@ attribute vec3 normals;
 
 uniform vec3 scaleProps;
 uniform vec3 translationProps;
-uniform vec3 rotationProps;
+uniform mat4 rotationMatrix;
+uniform vec3 overlayedRotation;
 
 uniform float material_shininess;
 uniform vec3 material_ambient;
@@ -30,23 +31,7 @@ uniform mat4 projectionMatrix;
 varying vec3 vSurfaceToLight[16];
 varying vec3 vNormal;
 
-void main(void) {
-    mat4 VP = projectionMatrix * viewMatrix;
-
-    mat4 scaleMatrix = mat4(
-        scaleProps.x, 0, 0, 0,
-        0, scaleProps.y, 0, 0,
-        0, 0, scaleProps.z, 0,
-        0, 0, 0, 1
-    );
-
-    mat4 translateMatrix = mat4(
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        translationProps, 1
-    );
-
+mat4 getRotation(vec3 rotationProps) {
     vec3 angles = radians( rotationProps );
     vec3 c = cos( angles );
     vec3 s = sin( angles );
@@ -72,9 +57,27 @@ void main(void) {
         0.0,  0.0, 0.0, 1.0
     );
 
-    mat4 rotationMatrix = rz * ry * rx;
-    mat4 worldMatrix = translateMatrix * rotationMatrix * scaleMatrix;
+    return rz * ry * rx;
+}
 
+void main(void) {
+    mat4 VP = projectionMatrix * viewMatrix;
+
+    mat4 scaleMatrix = mat4(
+        scaleProps.x, 0, 0, 0,
+        0, scaleProps.y, 0, 0,
+        0, 0, scaleProps.z, 0,
+        0, 0, 0, 1
+    );
+
+    mat4 translateMatrix = mat4(
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        translationProps, 1
+    );
+
+    mat4 worldMatrix = translateMatrix * rotationMatrix * scaleMatrix;
     vec3 surfacePosition = (worldMatrix * vec4(coordinates, 1.0)).xyz;
 
     for (int i = 0; i < 16; i++) {
@@ -96,6 +99,7 @@ uniform float material_shininess;
 uniform vec3 material_ambient;
 uniform vec3 material_diffuse;
 uniform vec3 material_specular;
+uniform vec3 overlayedRotation;
 
 uniform vec3 lightPosition[16];
 uniform vec3 lightColor[16];
@@ -136,7 +140,7 @@ void main(void) {
         gl_FragColor += vec4(light, 1.0);
     }
 
-    //gl_FragColor += vec4(normal, 1.0);
+    //gl_FragColor += vec4(overlayedRotation, 1.0);
 }
 </script>
 

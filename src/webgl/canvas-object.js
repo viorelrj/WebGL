@@ -17,7 +17,7 @@ class CanvasObject {
 
         this.scaleProps = [1, 1, 1]
         this.translationProps = [0, 0, 0];
-        this.rotationProps = [0, 0, 45];
+        this.rotationProps = [0, 0, 0];
 
         this.shininess = .1;
         this.ambient = [0, 1, 1];
@@ -31,11 +31,16 @@ class CanvasObject {
         this.glsl_projectionMatrix = null;
         this.glsl_scaleProps = null;
         this.glsl_translationProps = null;
-        this.glsl_rotationProps = null;
+        this.glsl_rotationMatrix = null;
         this.glsl_shininess = null;
         this.glsl_ambient = null;
         this.glsl_diffuse = null;
         this.glsl_specular = null;
+
+
+
+        this.overlayedRotation = [0, 30, 0];
+        this.glsl_overlayedRotation = null;
     }
 
     setVertices(vertices, indices, colors, normals) {
@@ -106,6 +111,16 @@ class CanvasObject {
             this.vertices[index + 1],
             this.vertices[index + 2],
         )
+    }
+
+    getRotationMatrix() {
+        let rotation = new glMatrix.mat4.create();
+        let angles = this.rotationProps.map(angle => radians(angle));
+        glMatrix.mat4.rotateX(rotation, rotation, angles[0]);
+        glMatrix.mat4.rotateY(rotation, rotation, angles[1]);
+        glMatrix.mat4.rotateZ(rotation, rotation, angles[2]);
+
+        return rotation;
     }
 
     getTriangles() {
@@ -232,7 +247,8 @@ class CanvasObject {
 
         this.glsl_scaleProps = new GLSLVarVec3(gl, program, 'scaleProps');
         this.glsl_translationProps = new GLSLVarVec3(gl, program, 'translationProps');
-        this.glsl_rotationProps = new GLSLVarVec3(gl, program, 'rotationProps');
+        this.glsl_rotationMatrix = new GLSLVarMat4(gl, program, 'rotationMatrix');
+        this.glsl_overlayedRotation = new GLSLVarVec3(gl, program, 'overlayedRotation');
 
         this.glsl_shininess = new GLSLVarF1(gl, program, 'material_shininess');
         this.glsl_ambient = new GLSLVarVec3(gl, program, 'material_ambient');
@@ -248,7 +264,8 @@ class CanvasObject {
         this.glsl_projectionMatrix.upload(gl, this.projectionMatrix);
         this.glsl_scaleProps.upload(gl, this.scaleProps);
         this.glsl_translationProps.upload(gl, this.translationProps);
-        this.glsl_rotationProps.upload(gl, this.rotationProps);
+        this.glsl_rotationMatrix.upload(gl, this.getRotationMatrix());
+        this.glsl_overlayedRotation.upload(gl, this.overlayedRotation);
         
         this.glsl_shininess.upload(gl, this.shininess);
         this.glsl_ambient.upload(gl, this.ambient);
