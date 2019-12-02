@@ -17,7 +17,7 @@ class CanvasObject {
 
         this.scaleProps = [1, 1, 1]
         this.translationProps = [0, 0, 0];
-        this.rotationProps = [0, 0, 0];
+        this.localRotationMatrix = glMatrix.mat4.create();
 
         this.shininess = .1;
         this.ambient = [0, 1, 1];
@@ -113,13 +113,7 @@ class CanvasObject {
         )
     }
 
-    getRotationMatrix() {
-        let rotation = new glMatrix.mat4.create();
-        let angles = this.rotationProps.map(angle => radians(angle));
-        glMatrix.mat4.rotateX(rotation, rotation, angles[0]);
-        glMatrix.mat4.rotateY(rotation, rotation, angles[1]);
-        glMatrix.mat4.rotateZ(rotation, rotation, angles[2]);
-
+    getLocalRotationMatrix() {
         return rotation;
     }
 
@@ -205,8 +199,21 @@ class CanvasObject {
         this._setProp('scaleProps', scaler);
     }
 
+    rotateGlobal(rotator) {
+        let globalRotationMatrix = glMatrix.mat4.create();
+        const angles = rotator.map(angle => radians(angle));
+        glMatrix.mat4.rotateX(globalRotationMatrix, globalRotationMatrix, angles[0]);
+        glMatrix.mat4.rotateY(globalRotationMatrix, globalRotationMatrix, angles[1]);
+        glMatrix.mat4.rotateZ(globalRotationMatrix, globalRotationMatrix, angles[2]);
+
+        glMatrix.mat4.mul(this.localRotationMatrix, this.localRotationMatrix, globalRotationMatrix);
+    }
+
     rotateBy(rotator) {
-        this._warpProp('rotationProps', rotator);
+        const angles = rotator.map( angle => radians(angle));
+        glMatrix.mat4.rotateX(this.localRotationMatrix, this.localRotationMatrix, angles[0]);
+        glMatrix.mat4.rotateY(this.localRotationMatrix, this.localRotationMatrix, angles[1]);
+        glMatrix.mat4.rotateZ(this.localRotationMatrix, this.localRotationMatrix, angles[2]);
     }
 
     rotateByViewPort(params) {
@@ -264,7 +271,7 @@ class CanvasObject {
         this.glsl_projectionMatrix.upload(gl, this.projectionMatrix);
         this.glsl_scaleProps.upload(gl, this.scaleProps);
         this.glsl_translationProps.upload(gl, this.translationProps);
-        this.glsl_rotationMatrix.upload(gl, this.getRotationMatrix());
+        this.glsl_rotationMatrix.upload(gl, this.localRotationMatrix);
         this.glsl_overlayedRotation.upload(gl, this.overlayedRotation);
         
         this.glsl_shininess.upload(gl, this.shininess);

@@ -95,6 +95,12 @@ class Scene {
             object.self.rotateBy(actionVector);
         }
 
+        if (action === 'rotateGlobal') {
+            const actionVector = payload;
+
+            object.self.rotateGlobal(actionVector);
+        }
+
         if (action === 'rotateByViewPort') {
             const actionVector = payload;
 
@@ -211,7 +217,8 @@ class Scene {
         this.light.uploadSelf(gl);
         for (let sceneObject of this.objectList) {
             
-            sceneObject.self.rotateBy([0, 0, 1]);
+            sceneObject.self.rotateBy([0, 0, .5]);
+            sceneObject.self.rotateGlobal([0, 1, 0]);
             // sceneObject.self.translateBy([0, 0, -0.1]);
             sceneObject.self.drawSelf(gl, program, this.camera);
         }

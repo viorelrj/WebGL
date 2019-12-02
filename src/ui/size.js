@@ -3,9 +3,9 @@ const setSize = function (canvas, gl, scene) {
     const height = body.offsetHeight;
     const width = body.offsetWidth;
 
-    canvas.style.height = height + 'px';
-    canvas.style.width = width + 'px';
-    gl.viewport(0, 0, canvas.width, canvas.height);
+    canvas.height = height;
+    canvas.width = width;
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 
     if (scene) {
         scene.camera.setHeight(height);
