@@ -38,13 +38,15 @@ class Scene {
         this.camera = new Camera([0, 0, 15], [0, 0, 0], [0, 1, 0], canvas.offsetWidth, canvas.offsetHeight);;
 
         this.light = new Light();
+        this.light.add();
         this.light.initSelf(gl, program);
 
         mouse.subscribeToDragPrimary(this.handleMouseMove.bind(this))
     }
 
     handleMouseMove(payload) {
-        // this.dispatchObject('rotateByViewPort', [payload[1], payload[0], 0])
+        // console.log(payload)
+        this.dispatchObject('rotateGlobal', [payload[1], payload[0], 0])
     }
 
     addLight() {
@@ -217,8 +219,8 @@ class Scene {
         this.light.uploadSelf(gl);
         for (let sceneObject of this.objectList) {
             
-            sceneObject.self.rotateBy([0, 0, .5]);
-            sceneObject.self.rotateGlobal([0, 1, 0]);
+            // sceneObject.self.rotateBy([0, 0, .5]);
+            // sceneObject.self.rotateGlobal([0, 1, 0]);
             // sceneObject.self.translateBy([0, 0, -0.1]);
             sceneObject.self.drawSelf(gl, program, this.camera);
         }

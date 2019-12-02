@@ -206,7 +206,7 @@ class CanvasObject {
         glMatrix.mat4.rotateY(globalRotationMatrix, globalRotationMatrix, angles[1]);
         glMatrix.mat4.rotateZ(globalRotationMatrix, globalRotationMatrix, angles[2]);
 
-        glMatrix.mat4.mul(this.localRotationMatrix, this.localRotationMatrix, globalRotationMatrix);
+        glMatrix.mat4.mul(this.localRotationMatrix, globalRotationMatrix, this.localRotationMatrix);
     }
 
     rotateBy(rotator) {
