@@ -103,12 +103,23 @@ class Mouse {
         }
     }
 
+    registerTouchStart(e) {
+        let evtObj = e.changedTouches[0];
+        this._setLastClick(evtObj.clientX, evtObj.clientY);
+    }
+
     initMouseDown() {
         this._initEventListener('mousedown', this.registerMouseClick.bind(this))
+        this._initEventListener('touchstart', this.registerTouchStart.bind(this))
     }
 
     initMouseMove() {
         this._initEventListener('mousemove', this.interpretMouseMove.bind(this));
+        this._initEventListener('touchmove', this.interpertTouchMove.bind(this));
+    }
+
+    interpertTouchMove(e){
+        this.handleTouchDrag(this._getMouseMoveDirection(e.changedTouches[0]))
     }
 
     interpretMouseMove(e) {
@@ -124,6 +135,10 @@ class Mouse {
     }
 
     handleDragPrimary(direction) {
+        this.dragPrimaryDelegates.map((item) => item(direction))
+    }
+
+    handleTouchDrag(direction) {
         this.dragPrimaryDelegates.map((item) => item(direction))
     }
 }
