@@ -2,7 +2,6 @@ import { cubeProps, pyramidProps, coneProps, sphereProps } from './consts.js';
 import { CanvasObject } from './webgl/canvas-object';
 import { Light } from './webgl/light';
 import { Camera } from './webgl/camera';
-import { mouse } from './ui/mouse';
 
 const objectMap = {
     'cube': {
@@ -35,18 +34,10 @@ class Scene {
         this.objectList = [];
         this.selectedIndex = 0;
     
-        this.camera = new Camera([0, 0, 15], [0, 0, 0], [0, 1, 0], canvas.offsetWidth, canvas.offsetHeight);;
+        this.camera = new Camera([0, 0, 15], [0, 0, 0], [0, 1, 0], canvas.width, canvas.height);;
 
         this.light = new Light();
-        this.light.add();
         this.light.initSelf(gl, program);
-
-        mouse.subscribeToDragPrimary(this.handleMouseMove.bind(this))
-    }
-
-    handleMouseMove(payload) {
-        // console.log(payload)
-        this.dispatchObject('rotateGlobal', [payload[1], payload[0], 0])
     }
 
     addLight() {
@@ -92,21 +83,13 @@ class Scene {
         }
 
         if (action === 'rotateBy') {
-            const actionVector = payload;
+            const { axisIndex, direction } = payload;
+            const object = this.objectList[this.selectedIndex];
+
+            const actionVector = [0, 0, 0];
+            actionVector[axisIndex] += direction * 6;
 
             object.self.rotateBy(actionVector);
-        }
-
-        if (action === 'rotateGlobal') {
-            const actionVector = payload;
-
-            object.self.rotateGlobal(actionVector);
-        }
-
-        if (action === 'rotateByViewPort') {
-            const actionVector = payload;
-
-            object.self.rotateByViewPort(actionVector);
         }
 
         if (action === 'scaleBy') {
@@ -217,10 +200,9 @@ class Scene {
 
     drawAll(gl, program) {
         this.light.uploadSelf(gl);
+
         for (let sceneObject of this.objectList) {
-            
-            // sceneObject.self.rotateBy([0, 0, .5]);
-            // sceneObject.self.rotateGlobal([0, 1, 0]);
+            // sceneObject.self.rotateBy([.1, .3, .2]);
             // sceneObject.self.translateBy([0, 0, -0.1]);
             sceneObject.self.drawSelf(gl, program, this.camera);
         }

@@ -1,6 +1,5 @@
 import {ArrayBuffer, IndexBuffer} from './buffer';
 import {GLSLVarMat4, GLSLVarVec3, GLSLVarF1} from './primitives';
-import { mouse } from '../ui/mouse';
 
 
 class CanvasObject {
@@ -17,7 +16,7 @@ class CanvasObject {
 
         this.scaleProps = [1, 1, 1]
         this.translationProps = [0, 0, 0];
-        this.localRotationMatrix = glMatrix.mat4.create();
+        this.rotationProps = [0, 0, 0];
 
         this.shininess = .1;
         this.ambient = [0, 1, 1];
@@ -31,16 +30,11 @@ class CanvasObject {
         this.glsl_projectionMatrix = null;
         this.glsl_scaleProps = null;
         this.glsl_translationProps = null;
-        this.glsl_rotationMatrix = null;
+        this.glsl_rotationProps = null;
         this.glsl_shininess = null;
         this.glsl_ambient = null;
         this.glsl_diffuse = null;
         this.glsl_specular = null;
-
-
-
-        this.overlayedRotation = [0, 30, 0];
-        this.glsl_overlayedRotation = null;
     }
 
     setVertices(vertices, indices, colors, normals) {
@@ -111,10 +105,6 @@ class CanvasObject {
             this.vertices[index + 1],
             this.vertices[index + 2],
         )
-    }
-
-    getLocalRotationMatrix() {
-        return rotation;
     }
 
     getTriangles() {
@@ -199,31 +189,8 @@ class CanvasObject {
         this._setProp('scaleProps', scaler);
     }
 
-    rotateGlobal(rotator) {
-        let globalRotationMatrix = glMatrix.mat4.create();
-        const angles = rotator.map(angle => radians(angle));
-        glMatrix.mat4.rotateX(globalRotationMatrix, globalRotationMatrix, angles[0]);
-        glMatrix.mat4.rotateY(globalRotationMatrix, globalRotationMatrix, angles[1]);
-        glMatrix.mat4.rotateZ(globalRotationMatrix, globalRotationMatrix, angles[2]);
-
-        glMatrix.mat4.mul(this.localRotationMatrix, globalRotationMatrix, this.localRotationMatrix);
-    }
-
     rotateBy(rotator) {
-        const angles = rotator.map( angle => radians(angle));
-        glMatrix.mat4.rotateX(this.localRotationMatrix, this.localRotationMatrix, angles[0]);
-        glMatrix.mat4.rotateY(this.localRotationMatrix, this.localRotationMatrix, angles[1]);
-        glMatrix.mat4.rotateZ(this.localRotationMatrix, this.localRotationMatrix, angles[2]);
-    }
-
-    rotateByViewPort(params) {
-        // let rotator = [
-        //     params[0] - this.rotationProps[0],
-        //     params[1] - this.rotationProps[1],
-        //     -this.rotationProps[2]
-        // ]
-
-        // console.log(rotator);
+        this._warpProp('rotationProps', rotator);
     }
 
     rotateSet(rotator) {
@@ -254,8 +221,7 @@ class CanvasObject {
 
         this.glsl_scaleProps = new GLSLVarVec3(gl, program, 'scaleProps');
         this.glsl_translationProps = new GLSLVarVec3(gl, program, 'translationProps');
-        this.glsl_rotationMatrix = new GLSLVarMat4(gl, program, 'rotationMatrix');
-        this.glsl_overlayedRotation = new GLSLVarVec3(gl, program, 'overlayedRotation');
+        this.glsl_rotationProps = new GLSLVarVec3(gl, program, 'rotationProps');
 
         this.glsl_shininess = new GLSLVarF1(gl, program, 'material_shininess');
         this.glsl_ambient = new GLSLVarVec3(gl, program, 'material_ambient');
@@ -271,8 +237,7 @@ class CanvasObject {
         this.glsl_projectionMatrix.upload(gl, this.projectionMatrix);
         this.glsl_scaleProps.upload(gl, this.scaleProps);
         this.glsl_translationProps.upload(gl, this.translationProps);
-        this.glsl_rotationMatrix.upload(gl, this.localRotationMatrix);
-        this.glsl_overlayedRotation.upload(gl, this.overlayedRotation);
+        this.glsl_rotationProps.upload(gl, this.rotationProps);
         
         this.glsl_shininess.upload(gl, this.shininess);
         this.glsl_ambient.upload(gl, this.ambient);
