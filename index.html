@@ -7,6 +7,7 @@ precision mediump float;
 
 attribute vec3 coordinates;
 attribute vec3 color;
+attribute vec3 vertTexCoord;
 attribute vec3 normals;
 
 uniform vec3 scaleProps;
@@ -78,6 +79,7 @@ void main(void) {
     for (int i = 0; i < 16; i++) {
         vSurfaceToLight[i] = lightPosition[i] - surfacePosition;
     }
+
     vNormal = (rotationMatrix * scaleMatrix * vec4(normals, 1.0)).xyz;
 
     gl_Position = VP * worldMatrix * vec4(coordinates, 1.0);
@@ -137,6 +139,7 @@ void main(void) {
     //gl_FragColor += vec4(normal, 1.0);
 }
 </script>
+
 
 <script type="text/javascript" src="libs/gl-matrix-min.js"></script>
 <script type="text/javascript" src="libs/webgl-utils.js"></script>
@@ -242,6 +245,11 @@ void main(void) {
                         <label for="material-shininess">Material shininess</label>
                         <input data-item="test" type="number" id="material-shininess">
                         </input>
+                    </div>
+                    <div class="control__item">
+                        <input type="file" id="obj-importer" class="js-upload-file" data-type="obj"/>
+                        <br>
+                        <input type="file" id="texture-importer" class="js-upload-file" data-type="image">
                     </div>
                 </div>
             </div>

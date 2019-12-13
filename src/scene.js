@@ -1,3 +1,4 @@
+import { parseWaveFront } from './file';
 import { cubeProps, pyramidProps, coneProps, sphereProps } from './consts.js';
 import { CanvasObject } from './webgl/canvas-object';
 import { Light } from './webgl/light';
@@ -19,6 +20,9 @@ const objectMap = {
     'sphere': {
         counter: 0,
         self: sphereProps
+    },
+    'custom': {
+        counter: 0
     }
 };
 
@@ -55,6 +59,21 @@ class Scene {
                 drawable
             )
         );
+    }
+
+    async importObject(gl, program, obj) {
+        let object = await parseWaveFront(obj);
+
+        const drawable = new CanvasObject(object.vertices, cubeProps.colors, object.vertexIndices, object.normals, object.verticesTextures, object.textureIndices, false);
+        // const drawable = new CanvasObject(object.vertices, cubeProps.colors, object.vertexIndices, [], true);
+        drawable.initSelf(gl, program);
+
+        this.objectList.push(
+            new SceneObject(
+                'custom-' + ++objectMap['custom'].counter,
+                drawable
+            )
+        )
     }
 
     getNameList() {

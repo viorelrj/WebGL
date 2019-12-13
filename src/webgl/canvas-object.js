@@ -3,14 +3,16 @@ import {GLSLVarMat4, GLSLVarVec3, GLSLVarF1} from './primitives';
 
 
 class CanvasObject {
-    constructor(vertices = [], colors = [], indices = [], normals=[], VBO = true) {
+    constructor(vertices = [], colors = [], indices = [], normals=[], textures = [], textureIndices = [], VBO = true) {
         this.meta = {}
         this.meta.isVBO = VBO;
 
-        this.setVertices(vertices, indices, colors, normals);
+        this.setVertices(vertices, indices, colors, normals, textures, textureIndices);
+        this.texture = null;
 
         this.verticesBuffer = null;
         this.colorsBuffer = null;
+        this.textureBuffer = null;
         this.indicesBuffer = null;
         this.normalsBuffer = null;
 
@@ -37,7 +39,7 @@ class CanvasObject {
         this.glsl_specular = null;
     }
 
-    setVertices(vertices, indices, colors, normals) {
+    setVertices(vertices, indices, colors, normals, textures, textureIndices) {
         if (this.meta.isVBO) {
             this.vertices = vertices;
             this.indices = indices;
@@ -47,8 +49,9 @@ class CanvasObject {
             this.indices = indices;
 
             const _vertices = [];
-            const _colors = []
-            
+            const _colors = [];
+            const _textures = [];
+
             for (let i = 0; i < indices.length; i++) {
                 _vertices.push(
                     vertices[indices[i] * 3 + 0],
@@ -61,11 +64,17 @@ class CanvasObject {
                     colors[indices[i] * 3 + 1],
                     colors[indices[i] * 3 + 2]
                 )
+
+                _textures.push(
+                    textures[textureIndices[i] * 2 + 0],
+                    textures[textureIndices[i] * 2 + 1],
+                )
             }
 
             this.vertices = _vertices;
             this.colors = _colors;
-            this.normals = this.getStandartNormals();
+            this.normals = normals;
+            this.texture = _textures;
         }
     }
 
@@ -124,8 +133,9 @@ class CanvasObject {
     initBuffer(gl) {
         this.verticesBuffer = new ArrayBuffer(gl);
         this.colorsBuffer = new ArrayBuffer(gl);
-        this.indicesBuffer = new IndexBuffer(gl);
+        this.textureBuffer = new ArrayBuffer(gl);
         this.normalsBuffer = new ArrayBuffer(gl);
+        this.indicesBuffer = new IndexBuffer(gl);
     }
 
     uploadSelfToBuffer(gl) {
@@ -133,6 +143,7 @@ class CanvasObject {
         this.colorsBuffer.upload(gl, this.getColors());
         this.indicesBuffer.upload(gl, this.getIndices());
         this.normalsBuffer.upload(gl, this.getNormals());
+        this.textureBuffer.upload(gl, this.texture);
     }
 
     getVertices() {
@@ -248,17 +259,22 @@ class CanvasObject {
     uploadAttributes(gl, program) {
         this.verticesBuffer.activate(gl);
         const coord = gl.getAttribLocation(program, 'coordinates');
-        gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(coord, 3, gl.FLOAT, gl.FALSE, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
         gl.enableVertexAttribArray(coord);
 
         this.colorsBuffer.activate(gl);
         const color = gl.getAttribLocation(program, 'color');
-        gl.vertexAttribPointer(color, 3, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(color, 3, gl.FLOAT, gl.FALSE, 0, 0);
         gl.enableVertexAttribArray(color);
+
+        this.textureBuffer.activate(gl);
+        const texture = gl.getAttribLocation(program, 'vertTexCoord');
+        gl.vertexAttribPointer(color, 2, gl.FLOAT, gl.FALSE, 0, 0);
+        gl.enableVertexAttribArray(texture);
 
         this.normalsBuffer.activate(gl);
         const normals = gl.getAttribLocation(program, 'normals');
-        gl.vertexAttribPointer(normals, 3, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(normals, 3, gl.FLOAT, gl.TRUE, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
         gl.enableVertexAttribArray(normals);
     }
 

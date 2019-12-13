@@ -35,6 +35,7 @@ window.onload = function init() {
     const materialShininess = this.document.getElementById('material-shininess');
     const btn_addLight = document.getElementById('add-light');
     const btns_dispatchLight = document.getElementsByClassName('js-dispatch-light-button');
+    const btns_import = document.getElementsByClassName('js-upload-file');
 
 
     function createPicker(id) {
@@ -185,6 +186,21 @@ window.onload = function init() {
 
             addObjectsToPanel(scene.getNameList());
         })
+    }
+    
+
+    for (let i = 0; i < btns_import.length; i++) {
+        const button = btns_import[i];
+        button.addEventListener('change', function() {
+            let selectedFiles = this.files;
+    
+            if (selectedFiles.length == 0) {
+                alert('Error : No file selected');
+                return;
+            }
+            let firstFile = selectedFiles[0];
+            scene.importObject(gl, program, firstFile)
+        });
     }
 
     for ( let i = 0; i < btns_dispatchLight.length; i++) {
