@@ -60,7 +60,6 @@ class Light {
     }
 
     _setProp(property, vec) {
-        console.log(this.instances)
         this.instances[this.selectedIndex][property] = vec;
     }
 

@@ -12,6 +12,18 @@ function getFileContent(file) {
     })
 }
 
+function readImageFromFile(file) {
+    return new Promise((resolve, reject) => {
+        let reader = new FileReader();
+
+        reader.onload = () => {
+            resolve(reader.result);
+        }
+
+        reader.readAsDataURL(file);
+    })
+}
+
 async function parseWaveFront(file) {
     let content = await getFileContent(file);
     let lines = content.split('\n');
@@ -49,8 +61,9 @@ async function parseWaveFront(file) {
             line = line.slice(3, line.length);
             line = line.split(' ');
             obj.verticesTextures.push(
-                parseInt(line[0]),
-                parseInt(line[2])
+                parseFloat(line[0]),
+                parseFloat(line[1]),
+                parseFloat(line[2])
             )
         } else if (line.startsWith('f ')) {
             line = line.slice(2, line.length - 2);
@@ -74,4 +87,4 @@ async function parseWaveFront(file) {
     return obj;
 }
 
-export {parseWaveFront}
+export {parseWaveFront, readImageFromFile}

@@ -1,17 +1,19 @@
-import {ArrayBuffer, IndexBuffer} from './buffer';
-import {GLSLVarMat4, GLSLVarVec3, GLSLVarF1} from './primitives';
+import {ArrayBuffer, IndexBuffer, TextureBuffer} from './buffer';
+import {GLSLVarMat4, GLSLVarVec3, GLSLVarF1, GLSLVarI1} from './primitives';
 
 
 class CanvasObject {
-    constructor(vertices = [], colors = [], indices = [], normals=[], textures = [], textureIndices = [], VBO = true) {
+    constructor(vertices = [], colors = [], indices = [], normals=[], texturesVertices = [], textureIndices = [], VBO = true) {
         this.meta = {}
         this.meta.isVBO = VBO;
 
-        this.setVertices(vertices, indices, colors, normals, textures, textureIndices);
+        this.texturesVertices;
+        this.setVertices(vertices, indices, colors, normals, texturesVertices, textureIndices);
         this.texture = null;
 
         this.verticesBuffer = null;
         this.colorsBuffer = null;
+        this.textureVerticesBuffer = null;
         this.textureBuffer = null;
         this.indicesBuffer = null;
         this.normalsBuffer = null;
@@ -28,6 +30,7 @@ class CanvasObject {
         this.viewMatrix = null;
         this.projectionMatrix = null;
 
+        this.glsl_texture = null;
         this.glsl_viewMatrix = null;
         this.glsl_projectionMatrix = null;
         this.glsl_scaleProps = null;
@@ -37,8 +40,10 @@ class CanvasObject {
         this.glsl_ambient = null;
         this.glsl_diffuse = null;
         this.glsl_specular = null;
-    }
 
+        console.log(this);
+    }
+    
     setVertices(vertices, indices, colors, normals, textures, textureIndices) {
         if (this.meta.isVBO) {
             this.vertices = vertices;
@@ -47,34 +52,36 @@ class CanvasObject {
             this.normals = normals;
         } else {
             this.indices = indices;
-
+            
             const _vertices = [];
             const _colors = [];
             const _textures = [];
-
+            
+            
             for (let i = 0; i < indices.length; i++) {
                 _vertices.push(
                     vertices[indices[i] * 3 + 0],
                     vertices[indices[i] * 3 + 1],
                     vertices[indices[i] * 3 + 2]
-                )
+                    )
 
-                _colors.push(
-                    colors[indices[i] * 3 + 0],
-                    colors[indices[i] * 3 + 1],
-                    colors[indices[i] * 3 + 2]
-                )
-
-                _textures.push(
-                    textures[textureIndices[i] * 2 + 0],
-                    textures[textureIndices[i] * 2 + 1],
-                )
+                    _colors.push(
+                        colors[indices[i] * 3 + 0],
+                        colors[indices[i] * 3 + 1],
+                        colors[indices[i] * 3 + 2]
+                    )
+                    
+                    _textures.push(
+                        textures[textureIndices[i] * 3 + 0],
+                        textures[textureIndices[i] * 3 + 1],
+                        textures[textureIndices[i] * 3 + 2],
+                    )
             }
-
+            
             this.vertices = _vertices;
             this.colors = _colors;
             this.normals = normals;
-            this.texture = _textures;
+            this.texturesVertices = _textures;
         }
     }
 
@@ -132,18 +139,22 @@ class CanvasObject {
 
     initBuffer(gl) {
         this.verticesBuffer = new ArrayBuffer(gl);
-        this.colorsBuffer = new ArrayBuffer(gl);
-        this.textureBuffer = new ArrayBuffer(gl);
+        // this.colorsBuffer = new ArrayBuffer(gl);
+        this.textureVerticesBuffer = new ArrayBuffer(gl);
+        this.textureBuffer = new TextureBuffer(gl);
         this.normalsBuffer = new ArrayBuffer(gl);
         this.indicesBuffer = new IndexBuffer(gl);
     }
 
     uploadSelfToBuffer(gl) {
         this.verticesBuffer.upload(gl, this.getVertices());
-        this.colorsBuffer.upload(gl, this.getColors());
+        // this.colorsBuffer.upload(gl, this.getColors());
         this.indicesBuffer.upload(gl, this.getIndices());
         this.normalsBuffer.upload(gl, this.getNormals());
-        this.textureBuffer.upload(gl, this.texture);
+        this.textureVerticesBuffer.upload(gl, this.texturesVertices);
+        if (this.texture) {
+            this.textureBuffer.upload(gl, this.texture);
+        }
     }
 
     getVertices() {
@@ -224,11 +235,18 @@ class CanvasObject {
         this._setProp('shininess', val);
     }
 
+    setTexture(texture) {
+        console.log('setting texture')
+        this.texture = texture;
+    }
+
     initSelf(gl, program) {
         this.initBuffer(gl);
 
         this.glsl_projectionMatrix = new GLSLVarMat4(gl, program, 'projectionMatrix');
         this.glsl_viewMatrix = new GLSLVarMat4(gl, program, 'viewMatrix');
+
+        this.glsl_texture = new GLSLVarI1(gl, program, 'sampler');
 
         this.glsl_scaleProps = new GLSLVarVec3(gl, program, 'scaleProps');
         this.glsl_translationProps = new GLSLVarVec3(gl, program, 'translationProps');
@@ -249,6 +267,8 @@ class CanvasObject {
         this.glsl_scaleProps.upload(gl, this.scaleProps);
         this.glsl_translationProps.upload(gl, this.translationProps);
         this.glsl_rotationProps.upload(gl, this.rotationProps);
+
+        this.glsl_texture.upload(gl, 0);
         
         this.glsl_shininess.upload(gl, this.shininess);
         this.glsl_ambient.upload(gl, this.ambient);
@@ -257,24 +277,25 @@ class CanvasObject {
     }
 
     uploadAttributes(gl, program) {
+        this.textureVerticesBuffer.activate(gl);
+        const texture = gl.getAttribLocation(program, 'vertTexCoord');
+        gl.vertexAttribPointer(texture, 3, gl.FLOAT, gl.FALSE, 0, 0);
+        gl.enableVertexAttribArray(texture);
+
+        
         this.verticesBuffer.activate(gl);
         const coord = gl.getAttribLocation(program, 'coordinates');
-        gl.vertexAttribPointer(coord, 3, gl.FLOAT, gl.FALSE, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
+        gl.vertexAttribPointer(coord, 3, gl.FLOAT, gl.FALSE, 0, 0);
         gl.enableVertexAttribArray(coord);
 
-        this.colorsBuffer.activate(gl);
-        const color = gl.getAttribLocation(program, 'color');
-        gl.vertexAttribPointer(color, 3, gl.FLOAT, gl.FALSE, 0, 0);
-        gl.enableVertexAttribArray(color);
-
-        this.textureBuffer.activate(gl);
-        const texture = gl.getAttribLocation(program, 'vertTexCoord');
-        gl.vertexAttribPointer(color, 2, gl.FLOAT, gl.FALSE, 0, 0);
-        gl.enableVertexAttribArray(texture);
+        // this.colorsBuffer.activate(gl);
+        // const color = gl.getAttribLocation(program, 'color');
+        // gl.vertexAttribPointer(color, 3, gl.FLOAT, gl.FALSE, 0, 0);
+        // gl.enableVertexAttribArray(color);
 
         this.normalsBuffer.activate(gl);
         const normals = gl.getAttribLocation(program, 'normals');
-        gl.vertexAttribPointer(normals, 3, gl.FLOAT, gl.TRUE, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
+        gl.vertexAttribPointer(normals, 3, gl.FLOAT, gl.FALSE, 0, 0);
         gl.enableVertexAttribArray(normals);
     }
 

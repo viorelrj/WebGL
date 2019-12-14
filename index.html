@@ -6,7 +6,7 @@
 precision mediump float;
 
 attribute vec3 coordinates;
-attribute vec3 color;
+//attribute vec3 color;
 attribute vec3 vertTexCoord;
 attribute vec3 normals;
 
@@ -28,6 +28,7 @@ uniform mat4 projectionMatrix;
 
 varying vec3 vSurfaceToLight[16];
 varying vec3 vNormal;
+varying vec3 vTexCoord;
 
 void main(void) {
     mat4 VP = projectionMatrix * viewMatrix;
@@ -81,7 +82,7 @@ void main(void) {
     }
 
     vNormal = (rotationMatrix * scaleMatrix * vec4(normals, 1.0)).xyz;
-
+    vTexCoord = vertTexCoord;
     gl_Position = VP * worldMatrix * vec4(coordinates, 1.0);
 }
 </script>
@@ -91,6 +92,9 @@ precision mediump float;
 
 varying vec3 vNormal;
 varying vec3 vSurfaceToLight[16];
+varying vec3 vTexCoord;
+
+uniform sampler2D sampler;
 
 uniform float material_shininess;
 uniform vec3 material_ambient;
@@ -135,8 +139,10 @@ void main(void) {
 
         gl_FragColor += vec4(light, 1.0);
     }
+    
 
-    //gl_FragColor += vec4(normal, 1.0);
+    gl_FragColor = texture2D(sampler, vTexCoord.xy);
+    //gl_FragColor = vec4(vTexCoord, 1);
 }
 </script>
 

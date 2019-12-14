@@ -1,7 +1,6 @@
 import { Scene } from './scene';
 import Pickr from '@simonwep/pickr';
 
-
 function initContext() {
     const canvas = document.getElementById("gl-canvas");
 
@@ -9,7 +8,7 @@ function initContext() {
     if (!gl) { alert("WebGL isn't available"); }
 
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(.1, .1, .1, 1);
+    gl.clearColor(.9, .9, .9, 1);
 
     gl.enable(gl.DEPTH_TEST);
     gl.cullFace(gl.BACK);
@@ -198,8 +197,16 @@ window.onload = function init() {
                 alert('Error : No file selected');
                 return;
             }
-            let firstFile = selectedFiles[0];
-            scene.importObject(gl, program, firstFile)
+            
+            if (button.dataset.type === 'obj') {
+                let firstFile = selectedFiles[0];
+                scene.importObject(gl, program, firstFile)
+            }
+
+            if (button.dataset.type === 'image') {
+                let firstFile = selectedFiles[0];
+                scene.importTexture(firstFile);
+            }
         });
     }
 
@@ -260,7 +267,7 @@ window.onload = function init() {
     }
 
     function render() {
-        gl.clearColor(.1, .1, .1, 1);
+        gl.clearColor(.9, .9, .9, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         scene.drawAll(gl, program);

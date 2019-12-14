@@ -1,4 +1,4 @@
-import { parseWaveFront } from './file';
+import { parseWaveFront, readImageFromFile } from './file';
 import { cubeProps, pyramidProps, coneProps, sphereProps } from './consts.js';
 import { CanvasObject } from './webgl/canvas-object';
 import { Light } from './webgl/light';
@@ -76,6 +76,12 @@ class Scene {
         )
     }
 
+    async importTexture(file) {
+        const object = this.objectList[this.selectedIndex]
+        let result = await readImageFromFile(file);
+        this.dispatchObject('textureSet', result);
+    }
+
     getNameList() {
         return this.objectList.map(obj => obj.name);
     }
@@ -140,6 +146,10 @@ class Scene {
 
         if (action == 'shininessSet') {
             object.self.shininessSet(payload);
+        }
+
+        if (action == 'textureSet') {
+            object.self.setTexture(payload);
         }
     }
 
