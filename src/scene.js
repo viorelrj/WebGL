@@ -149,7 +149,7 @@ class Scene {
         }
 
         if (action == 'textureSet') {
-            object.self.setTexture(payload);
+            object.self.setTexture(payload, this.objectList.lengt - 1);
         }
     }
 

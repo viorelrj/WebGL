@@ -115,7 +115,7 @@ void main(void) {
     vec3 specularLight;
     vec3 light;
 
-    vec3 ambient = material_ambient * ambientLight;
+    vec3 ambient = texture2D(sampler, vTexCoord.xy).xyz * ambientLight;
     vec3 normal = normalize(vNormal);
 
     gl_FragColor = vec4(ambient, 1);
@@ -125,10 +125,10 @@ void main(void) {
         distance = length(vSurfaceToLight[i]);
         surfaceToLight = normalize(vSurfaceToLight[i]);
         pointLightCoefficient = max(dot(normal, surfaceToLight), 0.0);
-        pointLight = material_diffuse * lightColor[i] * pointLightCoefficient;
+        pointLight = texture2D(sampler, vTexCoord.xy).xyz * lightColor[i] * pointLightCoefficient;
 
         specularCoefficient =  pow(max(dot(normal, surfaceToLight), 0.0), material_shininess);
-        specularLight = material_specular * lightColor[i] * specularCoefficient;
+        specularLight = texture2D(sampler, vTexCoord.xy).xyz * lightColor[i] * specularCoefficient;
 
         light += pointLight;
         light += specularLight;
@@ -141,7 +141,7 @@ void main(void) {
     }
     
 
-    gl_FragColor = texture2D(sampler, vTexCoord.xy);
+    //gl_FragColor = ;
     //gl_FragColor = vec4(vTexCoord, 1);
 }
 </script>

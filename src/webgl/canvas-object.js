@@ -10,6 +10,7 @@ class CanvasObject {
         this.texturesVertices;
         this.setVertices(vertices, indices, colors, normals, texturesVertices, textureIndices);
         this.texture = null;
+        this.textureIndex = null;
 
         this.verticesBuffer = null;
         this.colorsBuffer = null;
@@ -40,8 +41,6 @@ class CanvasObject {
         this.glsl_ambient = null;
         this.glsl_diffuse = null;
         this.glsl_specular = null;
-
-        console.log(this);
     }
     
     setVertices(vertices, indices, colors, normals, textures, textureIndices) {
@@ -235,9 +234,9 @@ class CanvasObject {
         this._setProp('shininess', val);
     }
 
-    setTexture(texture) {
-        console.log('setting texture')
+    setTexture(texture, textureIndex) {
         this.texture = texture;
+        this.textureIndex = textureIndex;
     }
 
     initSelf(gl, program) {
@@ -282,7 +281,6 @@ class CanvasObject {
         gl.vertexAttribPointer(texture, 3, gl.FLOAT, gl.FALSE, 0, 0);
         gl.enableVertexAttribArray(texture);
 
-        
         this.verticesBuffer.activate(gl);
         const coord = gl.getAttribLocation(program, 'coordinates');
         gl.vertexAttribPointer(coord, 3, gl.FLOAT, gl.FALSE, 0, 0);
