@@ -152,7 +152,7 @@ class CanvasObject {
         this.normalsBuffer.upload(gl, this.getNormals());
         this.textureVerticesBuffer.upload(gl, this.texturesVertices);
         if (this.texture) {
-            this.textureBuffer.upload(gl, this.texture);
+            this.textureBuffer.upload(gl, this.texture, this.textureIndex);
         }
     }
 
@@ -267,7 +267,7 @@ class CanvasObject {
         this.glsl_translationProps.upload(gl, this.translationProps);
         this.glsl_rotationProps.upload(gl, this.rotationProps);
 
-        this.glsl_texture.upload(gl, 0);
+        this.glsl_texture.upload(gl, this.textureIndex);
         
         this.glsl_shininess.upload(gl, this.shininess);
         this.glsl_ambient.upload(gl, this.ambient);

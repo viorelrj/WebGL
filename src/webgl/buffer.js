@@ -43,17 +43,18 @@ class IndexBuffer extends Buffer {
 
 class TextureBuffer {
     constructor(gl) {
-        gl.activeTexture(gl.TEXTURE0);
         this.id = gl.createTexture();
         if (!this.id) { console.error('Failed to create texture buffer'); }
     }
-
-    upload(gl, data) {
+    
+    upload(gl, data, textureIndex) {
         const self = this;
+        console.log('from Buffer ' + textureIndex)
         const image = new Image();
         image.src = data;
-
+        
         image.onload = function() {
+            gl.activeTexture(gl.TEXTURE0 + textureIndex);
             gl.bindTexture(gl.TEXTURE_2D, self.id);
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
