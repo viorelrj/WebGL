@@ -139,9 +139,9 @@ window.onload = function init() {
     }
 
     // Add button event listener
-    btn_addObject.addEventListener('click', function() {
+    btn_addObject.addEventListener('click', async function() {
         const objectType = select_objectType.value;
-        scene.addObject(gl, program, objectType);
+        await scene.addObject(gl, program, objectType);
 
         addObjectsToPanel();
     });
@@ -183,14 +183,14 @@ window.onload = function init() {
                 }
             );
 
-            addObjectsToPanel(scene.getNameList());
+            addObjectsToPanel();
         })
     }
     
 
     for (let i = 0; i < btns_import.length; i++) {
         const button = btns_import[i];
-        button.addEventListener('change', function() {
+        button.addEventListener('change', async function() {
             let selectedFiles = this.files;
     
             if (selectedFiles.length == 0) {
@@ -200,7 +200,8 @@ window.onload = function init() {
             
             if (button.dataset.type === 'obj') {
                 let firstFile = selectedFiles[0];
-                scene.importObject(gl, program, firstFile)
+                await scene.importObject(gl, program, firstFile);
+                addObjectsToPanel();
             }
 
             if (button.dataset.type === 'image') {
@@ -246,7 +247,7 @@ window.onload = function init() {
                 }
             );
 
-            addObjectsToPanel(scene.getNameList());
+            addObjectsToPanel();
         })
     }
 

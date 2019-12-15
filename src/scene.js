@@ -48,7 +48,7 @@ class Scene {
         this.light.add();
     }
 
-    addObject(gl, program, type) {
+    async addObject(gl, program, type) {
         const object = objectMap[type];
         const drawable = new CanvasObject(object.self.vertices, object.self.colors, object.self.indices, [], false);
         drawable.initSelf(gl, program);
@@ -63,9 +63,7 @@ class Scene {
 
     async importObject(gl, program, obj) {
         let object = await parseWaveFront(obj);
-
         const drawable = new CanvasObject(object.vertices, cubeProps.colors, object.vertexIndices, object.normals, object.verticesTextures, object.textureIndices, false);
-        // const drawable = new CanvasObject(object.vertices, cubeProps.colors, object.vertexIndices, [], true);
         drawable.initSelf(gl, program);
 
         this.objectList.push(
@@ -149,7 +147,8 @@ class Scene {
         }
 
         if (action == 'textureSet') {
-            object.self.setTexture(payload, this.objectList.length - 1);
+            const index = this.objectList.findIndex((item) => item == object);
+            object.self.setTexture(payload, index);
         }
     }
 
@@ -233,6 +232,7 @@ class Scene {
         for (let sceneObject of this.objectList) {
             // sceneObject.self.rotateBy([.1, .3, .2]);
             // sceneObject.self.translateBy([0, 0, -0.1]);
+            console.log(sceneObject.self.textureIndex)
             sceneObject.self.drawSelf(gl, program, this.camera);
         }
     }

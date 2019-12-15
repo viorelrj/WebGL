@@ -49,7 +49,6 @@ class TextureBuffer {
     
     upload(gl, data, textureIndex) {
         const self = this;
-        console.log('from Buffer ' + textureIndex)
         const image = new Image();
         image.src = data;
         
