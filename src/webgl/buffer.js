@@ -41,7 +41,40 @@ class IndexBuffer extends Buffer {
     }
 }
 
+class TextureBuffer {
+    constructor(gl) {
+        this.id = gl.createTexture();
+        if (!this.id) { console.error('Failed to create texture buffer'); }
+    }
+    
+    upload(gl, data, textureIndex) {
+        const self = this;
+        const image = new Image();
+        image.src = data;
+        
+        image.onload = function() {
+            gl.activeTexture(gl.TEXTURE0 + textureIndex);
+            gl.bindTexture(gl.TEXTURE_2D, self.id);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            // gl.bindTexture(gl.TEXTURE_2D, null);
+        }
+
+        // gl.bindTexture(gl.TEXTURE_2D, this.id);
+        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, data);
+    }
+}
+
 export {
     IndexBuffer,
-    ArrayBuffer
+    ArrayBuffer,
+    TextureBuffer
 };

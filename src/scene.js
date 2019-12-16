@@ -1,3 +1,4 @@
+import { parseWaveFront, readImageFromFile } from './file';
 import { cubeProps, pyramidProps, coneProps, sphereProps } from './consts.js';
 import { CanvasObject } from './webgl/canvas-object';
 import { Light } from './webgl/light';
@@ -20,6 +21,9 @@ const objectMap = {
     'sphere': {
         counter: 0,
         self: sphereProps
+    },
+    'custom': {
+        counter: 0
     }
 };
 
@@ -35,7 +39,7 @@ class Scene {
         this.objectList = [];
         this.selectedIndex = 0;
     
-        this.camera = new Camera([0, 0, 15], [0, 0, 0], [0, 1, 0], canvas.offsetWidth, canvas.offsetHeight);;
+        this.camera = new Camera([0, 0, 15], [0, 0, 0], [0, 1, 0], canvas.width, canvas.height);;
 
         this.light = new Light();
         this.light.add();
@@ -53,7 +57,7 @@ class Scene {
         this.light.add();
     }
 
-    addObject(gl, program, type) {
+    async addObject(gl, program, type) {
         const object = objectMap[type];
         const drawable = new CanvasObject(object.self.vertices, object.self.colors, object.self.indices, [], false);
         drawable.initSelf(gl, program);
@@ -64,6 +68,25 @@ class Scene {
                 drawable
             )
         );
+    }
+
+    async importObject(gl, program, obj) {
+        let object = await parseWaveFront(obj);
+        const drawable = new CanvasObject(object.vertices, cubeProps.colors, object.vertexIndices, object.normals, object.verticesTextures, object.textureIndices, false);
+        drawable.initSelf(gl, program);
+
+        this.objectList.push(
+            new SceneObject(
+                'custom-' + ++objectMap['custom'].counter,
+                drawable
+            )
+        )
+    }
+
+    async importTexture(file) {
+        const object = this.objectList[this.selectedIndex]
+        let result = await readImageFromFile(file);
+        this.dispatchObject('textureSet', result);
     }
 
     getNameList() {
@@ -138,6 +161,11 @@ class Scene {
 
         if (action == 'shininessSet') {
             object.self.shininessSet(payload);
+        }
+
+        if (action == 'textureSet') {
+            const index = this.objectList.findIndex((item) => item == object);
+            object.self.setTexture(payload, index);
         }
     }
 
@@ -217,11 +245,8 @@ class Scene {
 
     drawAll(gl, program) {
         this.light.uploadSelf(gl);
+
         for (let sceneObject of this.objectList) {
-            
-            // sceneObject.self.rotateBy([0, 0, .5]);
-            // sceneObject.self.rotateGlobal([0, 1, 0]);
-            // sceneObject.self.translateBy([0, 0, -0.1]);
             sceneObject.self.drawSelf(gl, program, this.camera);
         }
     }

@@ -16,7 +16,7 @@ class Light {
         this.glsl_ambient = null;
     }
 
-    add(position = [4, 4, 4], color = [.3, .0, .1]) {
+    add(position = [4, 4, 4], color = [1, 1, 1]) {
         if (this.instances.length < 16) {
             this.instances.push({
                 'position': position,
@@ -60,7 +60,6 @@ class Light {
     }
 
     _setProp(property, vec) {
-        console.log(this.instances)
         this.instances[this.selectedIndex][property] = vec;
     }
 

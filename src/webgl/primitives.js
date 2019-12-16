@@ -23,6 +23,16 @@ class GLSLVarMat4 extends GLSLVar {
     }
 }
 
+class GLSLVarI1 extends GLSLVar {
+    constructor(gl, program, name) {
+        super(gl, program, name, 'uniform1i')
+    }
+
+    upload(gl, variable) {
+        this._uploadNoTranspose(gl, variable);
+    }
+}
+
 class GLSLVarVec3 extends GLSLVar {
     constructor(gl, program, name) {
         super(gl, program, name, 'uniform3fv');
@@ -46,5 +56,6 @@ class GLSLVarF1 extends GLSLVar {
 export {
     GLSLVarMat4,
     GLSLVarVec3,
-    GLSLVarF1
+    GLSLVarF1,
+    GLSLVarI1
 }

@@ -1,6 +1,37 @@
+body {
+    overflow: hidden;
+}
+
 .controls {
     position: absolute;
-    bottom: 16px;
-    right: 16px;
+    height: 100%;
+    top: 0;
+    left: 100%;
+    /* transform: translateX(-100%); */
     background: white;
+
+    transition: transform .15s ease;
+}
+
+.controls.active {
+    transform: translateX(-100%);
+}
+
+.controls__wrapper {
+    position: relative;
+    height: 100%;
+}
+
+.controls__toggler {
+    position: absolute;
+    padding: 8px;
+    top: 50%;
+    right: 100%;
+
+    transform-origin: center bottom;
+    transform: rotate(-90deg) translateY(120%) translateX(50%);
+    border-radius: 8px 8px 0 0;
+    background: white;
+
+    cursor: pointer;
 }

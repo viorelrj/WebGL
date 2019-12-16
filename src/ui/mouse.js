@@ -95,12 +95,17 @@ class Mouse {
         this._preventContextMenu();
         this.initMouseMove();
         this.initMouseDown();
+        this.initMouseUp();
     }
 
     registerMouseClick(e) {
         if(this._getMouseClick(e) == PRIMARY) {
             this._setLastClick(e.clientX, e.clientY);
         }
+    }
+
+    registerMouseUp(e) {
+        document.getElementById('gl-canvas').style.cursor = 'grab';
     }
 
     registerTouchStart(e) {
@@ -111,6 +116,10 @@ class Mouse {
     initMouseDown() {
         this._initEventListener('mousedown', this.registerMouseClick.bind(this))
         this._initEventListener('touchstart', this.registerTouchStart.bind(this))
+    }
+
+    initMouseUp() {
+        this._initEventListener('mouseup', this.registerMouseUp.bind(this));
     }
 
     initMouseMove() {
@@ -135,6 +144,7 @@ class Mouse {
     }
 
     handleDragPrimary(direction) {
+        document.getElementById('gl-canvas').style.cursor = 'grabbing';
         this.dragPrimaryDelegates.map((item) => item(direction))
     }
 

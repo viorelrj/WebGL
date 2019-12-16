@@ -4,11 +4,13 @@
 <link rel="stylesheet" href="css/colorpicker.css">
 <link rel="stylesheet" href="css/reset.css">
 <link rel="stylesheet" href="css/controls.css">
+<link rel="stylesheet" href="css/canvas.css">
 <script id="vertex-shader" type="x-shader/x-vertex">
 precision mediump float;
 
 attribute vec3 coordinates;
-attribute vec3 color;
+//attribute vec3 color;
+attribute vec3 vertTexCoord;
 attribute vec3 normals;
 
 uniform vec3 scaleProps;
@@ -30,6 +32,7 @@ uniform mat4 projectionMatrix;
 
 varying vec3 vSurfaceToLight[16];
 varying vec3 vNormal;
+varying vec3 vTexCoord;
 
 mat4 getRotation(vec3 rotationProps) {
     vec3 angles = radians( rotationProps );
@@ -78,13 +81,15 @@ void main(void) {
     );
 
     mat4 worldMatrix = translateMatrix * rotationMatrix * scaleMatrix;
+
     vec3 surfacePosition = (worldMatrix * vec4(coordinates, 1.0)).xyz;
 
     for (int i = 0; i < 16; i++) {
         vSurfaceToLight[i] = lightPosition[i] - surfacePosition;
     }
-    vNormal = (rotationMatrix * scaleMatrix * vec4(normals, 1.0)).xyz;
 
+    vNormal = (rotationMatrix * scaleMatrix * vec4(normals, 1.0)).xyz;
+    vTexCoord = vertTexCoord;
     gl_Position = VP * worldMatrix * vec4(coordinates, 1.0);
 }
 </script>
@@ -94,6 +99,9 @@ precision mediump float;
 
 varying vec3 vNormal;
 varying vec3 vSurfaceToLight[16];
+varying vec3 vTexCoord;
+
+uniform sampler2D sampler;
 
 uniform float material_shininess;
 uniform vec3 material_ambient;
@@ -115,7 +123,7 @@ void main(void) {
     vec3 specularLight;
     vec3 light;
 
-    vec3 ambient = material_ambient * ambientLight;
+    vec3 ambient = texture2D(sampler, vTexCoord.xy).xyz * ambientLight;
     vec3 normal = normalize(vNormal);
 
     gl_FragColor = vec4(ambient, 1);
@@ -125,10 +133,10 @@ void main(void) {
         distance = length(vSurfaceToLight[i]);
         surfaceToLight = normalize(vSurfaceToLight[i]);
         pointLightCoefficient = max(dot(normal, surfaceToLight), 0.0);
-        pointLight = material_diffuse * lightColor[i] * pointLightCoefficient;
+        pointLight = texture2D(sampler, vTexCoord.xy).xyz * lightColor[i] * pointLightCoefficient;
 
         specularCoefficient =  pow(max(dot(normal, surfaceToLight), 0.0), material_shininess);
-        specularLight = material_specular * lightColor[i] * specularCoefficient;
+        specularLight = texture2D(sampler, vTexCoord.xy).xyz * lightColor[i] * specularCoefficient;
 
         light += pointLight;
         light += specularLight;
@@ -139,10 +147,13 @@ void main(void) {
 
         gl_FragColor += vec4(light, 1.0);
     }
+    
 
-    //gl_FragColor += vec4(overlayedRotation, 1.0);
+    //gl_FragColor = ;
+    //gl_FragColor = vec4(vTexCoord, 1);
 }
 </script>
+
 
 <script type="text/javascript" src="libs/gl-matrix-min.js"></script>
 <script type="text/javascript" src="libs/webgl-utils.js"></script>
@@ -150,104 +161,114 @@ void main(void) {
 <script type="text/javascript" src="libs/MV.js"></script>
 <script type="text/javascript" src="dist/bundle.js"></script>
 
-<body id='body'>
-    <canvas id="gl-canvas">
+<body id ="body">
+    <canvas id="gl-canvas" width="512" height=" 512">
         Oops ... your browser doesn't support the HTML5 canvas element
     </canvas>
-    <div class="controls">
-        <div class="controls__add">
-            <label for="object-type">I would like to add a: </label>
-            <select name="object" id="object-type">
-                <option value="cube">Cube</option>
-                <option value="cone">Cone</option>
-                <option value="pyramid">Pyramid</option>
-                <option value="sphere">Sphere</option>
-            </select>
-            <button id="add-object">Do it!</button>
+    <div class="controls active" id="controls">
+        <div class="controls__wrapper">
+            <div class="controls__toggler" id="controls-toggler">
+                Controls
+            </div>
+            <div class="controls__content">
+                <div class="controls__add">
+                    <div class="control__item">
+                        <input type="file" id="obj-importer" class="js-upload-file" data-type="obj" accept=".obj"/>
+                        <br>
+                        <input type="file" id="texture-importer" class="js-upload-file" data-type="image" accept=".jpg, .png">
+                    </div>
+                </div>
+            </div>
         </div>
         <!-- <hr> -->
         <!-- object -->
         <!-- <div class="controls__modifications">
-            <div class="control__row">
-                <div class="control__item">
-                    <label for="object-index"> Make </label>
-                    <select name="object-index" id="object-index">
-                    </select>
-                    <button class="js-dispatch-object-button" data-method="remove">Gone!</button>
-                </div>
                 <div class="control__row">
-                    <div class="control__item control__translate">
-                        <p>Translate:</p>
-                        <div>
-                            <span>By axis X:</span>
-                            <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="0" data-direction="-1">-</button>
-                            <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="0" data-direction="1">+</button>
-                        </div>
-                        <div>
-                            <span>By axis Y:</span>
-                            <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="1" data-direction="-1">-</button>
-                            <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="1" data-direction="1">+</button>
-                        </div>
-                        <div>
-                            <span>By axis Z:</span>
-                            <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="2" data-direction="-1">-</button>
-                            <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="2" data-direction="1">+</button>
-                        </div>
-                    </div>
-                    <div class="control__item control__rotate">
-                        <p>Rotate:</p>
-                        <div>
-                            <span>By axis X:</span>
-                            <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="0" data-direction="-1">-</button>
-                            <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="0" data-direction="1">+</button>
-                        </div>
-                        <div>
-                            <span>By axis Y:</span>
-                            <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="1" data-direction="-1">-</button>
-                            <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="1" data-direction="1">+</button>
-                        </div>
-                        <div>
-                            <span>By axis Z:</span>
-                            <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="2" data-direction="-1">-</button>
-                            <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="2" data-direction="1">+</button>
-                        </div>
-                    </div>
-                    <div class="control__item control__scale">
-                        <p>Scale:</p>
-                        <div>
-                            <span>By axis X:</span>
-                            <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="0" data-direction="-1">-</button>
-                            <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="0" data-direction="1">+</button>
-                        </div>
-                        <div>
-                            <span>By axis Y:</span>
-                            <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="1" data-direction="-1">-</button>
-                            <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="1" data-direction="1">+</button>
-                        </div>
-                        <div>
-                            <span>By axis Z:</span>
-                            <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="2" data-direction="-1">-</button>
-                            <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="2" data-direction="1">+</button>
-                        </div>
-                    </div>
                     <div class="control__item">
-                        <label for="material-ambient">Material ambient</label>
-                        <div data-item="test" id="material-ambient">
+                        <label for="object-index"> Make </label>
+                        <select name="object-index" id="object-index">
+                        </select>
+                        <button class="js-dispatch-object-button" data-method="remove">Gone!</button>
+                    </div>
+                    <div class="control__row">
+                        <div class="control__item control__translate">
+                            <p>Translate:</p>
+                            <div>
+                                <span>By axis X:</span>
+                                <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="0" data-direction="-1">-</button>
+                                <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="0" data-direction="1">+</button>
+                            </div>
+                            <div>
+                                <span>By axis Y:</span>
+                                <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="1" data-direction="-1">-</button>
+                                <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="1" data-direction="1">+</button>
+                            </div>
+                            <div>
+                                <span>By axis Z:</span>
+                                <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="2" data-direction="-1">-</button>
+                                <button class="js-dispatch-object-button" data-method="translateBy" data-axis-index="2" data-direction="1">+</button>
+                            </div>
                         </div>
-                        <br>
-    
-                        <label for="material-diffuse">Material diffuse</label>
-                        <div data-item="test" id="material-diffuse">
+                        <div class="control__item control__rotate">
+                            <p>Rotate:</p>
+                            <div>
+                                <span>By axis X:</span>
+                                <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="0" data-direction="-1">-</button>
+                                <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="0" data-direction="1">+</button>
+                            </div>
+                            <div>
+                                <span>By axis Y:</span>
+                                <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="1" data-direction="-1">-</button>
+                                <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="1" data-direction="1">+</button>
+                            </div>
+                            <div>
+                                <span>By axis Z:</span>
+                                <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="2" data-direction="-1">-</button>
+                                <button class="js-dispatch-object-button" data-method="rotateBy" data-axis-index="2" data-direction="1">+</button>
+                            </div>
                         </div>
-                        <br>
-    
-                        <label for="material-specular">Material specular</label>
-                        <div data-item="test" id="material-specular">
+                        <div class="control__item control__scale">
+                            <p>Scale:</p>
+                            <div>
+                                <span>By axis X:</span>
+                                <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="0" data-direction="-1">-</button>
+                                <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="0" data-direction="1">+</button>
+                            </div>
+                            <div>
+                                <span>By axis Y:</span>
+                                <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="1" data-direction="-1">-</button>
+                                <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="1" data-direction="1">+</button>
+                            </div>
+                            <div>
+                                <span>By axis Z:</span>
+                                <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="2" data-direction="-1">-</button>
+                                <button class="js-dispatch-object-button" data-method="scaleBy" data-axis-index="2" data-direction="1">+</button>
+                            </div>
                         </div>
-    
-                        <label for="material-shininess">Material shininess</label>
-                        <input data-item="test" type="number" id="material-shininess">
-                        </input>
+                        <div class="control__item">
+                            <label for="material-ambient">Material ambient</label>
+                            <div data-item="test" id="material-ambient">
+                            </div>
+                            <br>
+        
+                            <label for="material-diffuse">Material diffuse</label>
+                            <div data-item="test" id="material-diffuse">
+                            </div>
+                            <br>
+        
+                            <label for="material-specular">Material specular</label>
+                            <div data-item="test" id="material-specular">
+                            </div>
+        
+                            <label for="material-shininess">Material shininess</label>
+                            <input data-item="test" type="number" id="material-shininess">
+                            </input>
+                        </div>
+                        <div class="control__item">
+                            <input type="file" id="obj-importer" class="js-upload-file" data-type="obj"/>
+                            <br>
+                            <input type="file" id="texture-importer" class="js-upload-file" data-type="image">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -298,7 +319,7 @@ void main(void) {
                         <div id="light-ambient">
                         </div>
                         <br>
-        
+    
                         <label for="light-color">Light color</label>
                         <div id="light-color">
                         </div>
@@ -308,8 +329,8 @@ void main(void) {
             </div>
         </div> -->
         <!-- end light -->
-        <!-- <hr>
-        <div class="controls__camera">
+        <!-- <hr> -->
+        <!-- <div class="controls__camera">
             <p>Make camera: </p>
             <div class="control__row">
                 <div class="control__item control__translate">
@@ -340,43 +361,56 @@ void main(void) {
                     <p>Translate:</p>
                     <div>
                         <span>By axis X:</span>
-                        <button class="js-dispatch-camera-button" data-method="translateBy" data-axis-index="0" data-direction="-1">-</button>
-                        <button class="js-dispatch-camera-button" data-method="translateBy" data-axis-index="0" data-direction="1">+</button>
+                        <button class="js-dispatch-camera-button" data-method="translateBy" data-axis-index="0"
+                            data-direction="-1">-</button>
+                        <button class="js-dispatch-camera-button" data-method="translateBy" data-axis-index="0"
+                            data-direction="1">+</button>
                     </div>
                     <div>
                         <span>By axis Y:</span>
-                        <button class="js-dispatch-camera-button" data-method="translateBy" data-axis-index="1" data-direction="-1">-</button>
-                        <button class="js-dispatch-camera-button" data-method="translateBy" data-axis-index="1" data-direction="1">+</button>
+                        <button class="js-dispatch-camera-button" data-method="translateBy" data-axis-index="1"
+                            data-direction="-1">-</button>
+                        <button class="js-dispatch-camera-button" data-method="translateBy" data-axis-index="1"
+                            data-direction="1">+</button>
                     </div>
                     <div>
                         <span>By axis Z:</span>
-                        <button class="js-dispatch-camera-button" data-method="translateBy" data-axis-index="2" data-direction="-1">-</button>
-                        <button class="js-dispatch-camera-button" data-method="translateBy" data-axis-index="2" data-direction="1">+</button>
+                        <button class="js-dispatch-camera-button" data-method="translateBy" data-axis-index="2"
+                            data-direction="-1">-</button>
+                        <button class="js-dispatch-camera-button" data-method="translateBy" data-axis-index="2"
+                            data-direction="1">+</button>
                     </div>
                 </div>
                 <div class="control__item control__scale">
                     <p>Orient:</p>
                     <div>
                         <span>By axis X:</span>
-                        <button class="js-dispatch-camera-button" data-method="moveFocusPointBy" data-axis-index="0" data-direction="-1">-</button>
-                        <button class="js-dispatch-camera-button" data-method="moveFocusPointBy" data-axis-index="0" data-direction="1">+</button>
+                        <button class="js-dispatch-camera-button" data-method="moveFocusPointBy" data-axis-index="0"
+                            data-direction="-1">-</button>
+                        <button class="js-dispatch-camera-button" data-method="moveFocusPointBy" data-axis-index="0"
+                            data-direction="1">+</button>
                     </div>
                     <div>
                         <span>By axis Y:</span>
-                        <button class="js-dispatch-camera-button" data-method="moveFocusPointBy" data-axis-index="1" data-direction="-1">-</button>
-                        <button class="js-dispatch-camera-button" data-method="moveFocusPointBy" data-axis-index="1" data-direction="1">+</button>
+                        <button class="js-dispatch-camera-button" data-method="moveFocusPointBy" data-axis-index="1"
+                            data-direction="-1">-</button>
+                        <button class="js-dispatch-camera-button" data-method="moveFocusPointBy" data-axis-index="1"
+                            data-direction="1">+</button>
                     </div>
                     <div>
                         <span>By axis Z:</span>
-                        <button class="js-dispatch-camera-button" data-method="moveFocusPointBy" data-axis-index="2" data-direction="-1">-</button>
-                        <button class="js-dispatch-camera-button" data-method="moveFocusPointBy" data-axis-index="2" data-direction="1">+</button>
+                        <button class="js-dispatch-camera-button" data-method="moveFocusPointBy" data-axis-index="2"
+                            data-direction="-1">-</button>
+                        <button class="js-dispatch-camera-button" data-method="moveFocusPointBy" data-axis-index="2"
+                            data-direction="1">+</button>
                     </div>
                 </div>
                 <div class="control__item">
                     <p>Properties:</p>
                     <div>
                         <label for="camera-fov">FOV: </label>
-                        <input class="js-dispatch-camera-input" data-method="setFov" type="number" step="5" value="75" id="camera-fov">
+                        <input class="js-dispatch-camera-input" data-method="setFov" type="number" step="5" value="75"
+                            id="camera-fov">
                     </div>
                 </div>
                 <div class="control__item">
@@ -384,11 +418,13 @@ void main(void) {
                         <p>Viewbox</p>
                         <label for="camera-near"> Nearest point: </label>
                         <br>
-                        <input class="js-dispatch-camera-input" data-method="setClose" type="number" step="1" value="1" id="camera-near">
+                        <input class="js-dispatch-camera-input" data-method="setClose" type="number" step="1" value="1"
+                            id="camera-near">
                         <br>
                         <label for="camera-far"> Furthest point: </label>
                         <br>
-                        <input class="js-dispatch-camera-input" data-method="setFar" type="number" step="1" value="1000" id="camera-far">
+                        <input class="js-dispatch-camera-input" data-method="setFar" type="number" step="1" value="1000"
+                            id="camera-far">
                     </div>
                 </div>
                 <div class="control__item">
@@ -396,29 +432,34 @@ void main(void) {
                         <p>Screen</p>
                         <label for="camera-width"> Width: </label>
                         <br>
-                        <input class="js-dispatch-camera-input" data-method="setWidth" type="number" step="1" value="250" id="camera-width">
+                        <input class="js-dispatch-camera-input" data-method="setWidth" type="number" step="1" value="250"
+                            id="camera-width">
                         <br>
                         <label for="camera-height"> height: </label>
                         <br>
-                        <input class="js-dispatch-camera-input" data-method="setHeight" type="number" step="1" value="250" id="camera-height">
+                        <input class="js-dispatch-camera-input" data-method="setHeight" type="number" step="1" value="250"
+                            id="camera-height">
                     </div>
                 </div>
                 <div class="control__item">
                     <div>
                         <p>UP:</p>
                         <label for="camera-up-x">X: </label>
-                        <input class="js-dispatch-camera-input" data-method="setUpX" type="number" value="0" id="camera-up-x">
+                        <input class="js-dispatch-camera-input" data-method="setUpX" type="number" value="0"
+                            id="camera-up-x">
                         <br>
                         <label for="camera-up-x">Y: </label>
-                        <input class="js-dispatch-camera-input" data-method="setUpY" type="number" value="1" id="camera-up-y">
+                        <input class="js-dispatch-camera-input" data-method="setUpY" type="number" value="1"
+                            id="camera-up-y">
                         <br>
                         <label for="camera-up-x">Z: </label>
-                        <input class="js-dispatch-camera-input" data-method="setUpZ" type="number" value="0" id="camera-up-z">
+                        <input class="js-dispatch-camera-input" data-method="setUpZ" type="number" value="0"
+                            id="camera-up-z">
                     </div>
                 </div>
             </div>
         </div> -->
     </div>
-</body>
-
-</html>
+    </body>
+    
+    </html>
