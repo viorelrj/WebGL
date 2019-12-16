@@ -3,14 +3,14 @@ import {GLSLVarMat4, GLSLVarVec3, GLSLVarF1, GLSLVarI1} from './primitives';
 
 
 class CanvasObject {
-    constructor(vertices = [], colors = [], indices = [], normals=[], texturesVertices = [], textureIndices = [], VBO = true) {
+    constructor(vertices = [], colors = [], indices = [], normals=[], texturesVertices = [], textureIndices = [], index, VBO = true) {
         this.meta = {}
         this.meta.isVBO = VBO;
 
         this.texturesVertices;
         this.setVertices(vertices, indices, colors, normals, texturesVertices, textureIndices);
         this.texture = null;
-        this.textureIndex = null;
+        this.textureIndex = index;
 
         this.verticesBuffer = null;
         this.colorsBuffer = null;
@@ -299,6 +299,7 @@ class CanvasObject {
 
     drawSelf(gl, program, camera) {
         this.uploadSelfToBuffer(gl);
+        // console.log(this.textureIndex)
 
         if (this.meta.isVBO) {
             this.indicesBuffer.activate(gl);

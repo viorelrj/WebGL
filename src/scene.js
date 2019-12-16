@@ -37,7 +37,7 @@ class Scene {
     constructor (gl, canvas, program) {
         this.objectList = [];
         this.selectedIndex = 0;
-    
+
         this.camera = new Camera([0, 0, 15], [0, 0, 0], [0, 1, 0], canvas.width, canvas.height);;
 
         this.light = new Light();
@@ -50,7 +50,9 @@ class Scene {
 
     async addObject(gl, program, type) {
         const object = objectMap[type];
-        const drawable = new CanvasObject(object.self.vertices, object.self.colors, object.self.indices, [], false);
+        const index = this.objectList.length;
+
+        const drawable = new CanvasObject(object.self.vertices, object.self.colors, object.self.indices, [], index, false);
         drawable.initSelf(gl, program);
 
         this.objectList.push(
@@ -63,7 +65,8 @@ class Scene {
 
     async importObject(gl, program, obj) {
         let object = await parseWaveFront(obj);
-        const drawable = new CanvasObject(object.vertices, cubeProps.colors, object.vertexIndices, object.normals, object.verticesTextures, object.textureIndices, false);
+        const index = this.objectList.length;
+        const drawable = new CanvasObject(object.vertices, cubeProps.colors, object.vertexIndices, object.normals, object.verticesTextures, object.textureIndices, index, false);
         drawable.initSelf(gl, program);
 
         this.objectList.push(
@@ -230,9 +233,6 @@ class Scene {
         this.light.uploadSelf(gl);
 
         for (let sceneObject of this.objectList) {
-            // sceneObject.self.rotateBy([.1, .3, .2]);
-            // sceneObject.self.translateBy([0, 0, -0.1]);
-            console.log(sceneObject.self.textureIndex)
             sceneObject.self.drawSelf(gl, program, this.camera);
         }
     }
